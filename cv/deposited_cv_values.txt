@@ -1,0 +1,26 @@
+# reference for CV2: 9MQH/A; units Angstrom
+pdb   ch state     CV1_CA CV2_rmsd scaf_rmsd nscaf  CZ-OG1
+9MQH  A  inactive    6.75     0.00      0.00   134    5.49
+9MQJ  A  inactive    6.68     0.90      0.96   134    4.38
+9MQI  A  inactive    6.65     0.83      0.91   134    4.36
+9PXU  R  inactive    6.58     0.63      0.87   134    4.61
+10TM  R  active     12.24     4.09      1.42   134   12.23
+10TM  F  active     12.24     4.09      1.42   134   12.23
+9PPQ  R  unknown    13.00     4.34      1.32   134   12.58
+8F7Q  R  active     13.08     3.92      1.35   134   12.68
+8F7Q  M  active     13.18     4.08      1.34   134   12.62
+8Y72  R  active     13.03     4.41      1.38   134   12.68
+
+# reference for CV2: 9PXU/R; units Angstrom
+pdb   ch state     CV1_CA CV2_rmsd scaf_rmsd nscaf  CZ-OG1
+9MQH  A  inactive    6.75     0.63      0.87   134    5.49
+9MQJ  A  inactive    6.68     1.15      0.96   134    4.38
+9MQI  A  inactive    6.65     1.08      0.93   134    4.36
+9PXU  R  inactive    6.58     0.00      0.00   134    4.61
+10TM  R  active     12.24     3.78      1.39   134   12.23
+10TM  F  active     12.24     3.78      1.39   134   12.23
+9PPQ  R  unknown    13.00     4.06      1.33   134   12.58
+8F7Q  R  active     13.08     3.63      1.34   134   12.68
+8F7Q  M  active     13.18     3.74      1.35   134   12.62
+8Y72  R  active     13.03     4.10      1.37   134   12.68
+
