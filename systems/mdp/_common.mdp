@@ -11,5 +11,5 @@ rvdw                    = 1.0
 DispCorr                = EnerPres
 constraints             = h-bonds
 constraint-algorithm    = lincs
-lincs-order             = 4
-lincs-iter              = 1
+lincs-order             = 6     ; 4 fs + HMR: order 4 / iter 1 lets Met CE methyls spin (LINCS aborts); see NOTES
+lincs-iter              = 2

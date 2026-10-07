@@ -241,3 +241,32 @@ biasing; the QC is rerun over both 100 ns legs at the §6.4 decision point.
 5 × dt. HMR does not touch heavy–heavy bonds; Lipid21 is validated with HMR at 4 fs,
 and Verlet is stable well past this ratio. `equilibrate.sh` accepts **only** this
 "oscillational period" warning and fails on any other; there is no blanket `-maxwarn`.
+
+### Unbiased legs crashed at 4 fs — methionine methyls, fixed by LINCS accuracy (Day 1)
+
+**What happened.** Both systems completed all six restrained NPT stages, then aborted
+in unrestrained production with "Too many LINCS warnings (1000)": active at 28 ps,
+inactive at 60 ps. **Every failing atom was a methionine CE** (the S–CH₃ methyl):
+Met74, 92, 101, 132, 153, 163, 205, 245, 266 and 283, the same set in both systems.
+Constraint deviations were tiny (rms ~4×10⁻⁵), but CE–H bonds rotated > 30° per step.
+That is ~25× the thermal angular speed of an HMR methyl, so it was an integration
+artefact, not physics. Warnings began in the first 4 fs NPT stage. Solute restraints
+kept them under the per-run abort limit until production.
+
+**Test** (`env/test_timestep.sh`; 100 ps each from the same equilibrated `npt_10` state;
+warnings counted in stderr, since GROMACS does not write them to md.log):
+
+| setup | LINCS warnings / 100 ps | ns/day (A30) | T Solute/MEMB/SOLV (K) |
+|---|---|---|---|
+| 4 fs, lincs-order 4 / iter 1 (as run) | aborted at 28 ps | — | — |
+| **4 fs, lincs-order 6 / iter 2** | **0** | **393** | 310.7 / 310.8 / 308.7 |
+| 3 fs, order 4 / iter 1 | 0 | 359 | 311.3 / 311.2 / 309.4 |
+| 2 fs, order 4 / iter 1 | 0 | 255 | 310.0 / 310.1 / 309.5 |
+
+**Decision:** 4 fs with **lincs-order 6, lincs-iter 2** for every stage and for OPES
+(`systems/mdp/_common.mdp`). Default LINCS is too coarse for coupled CH₃ constraints with
+3 amu hydrogens at 4 fs, and the GROMACS manual recommends higher order/iterations for
+large time steps. The equilibrated `npt_10` states are kept: deviations stayed ~10⁻⁴
+throughout and the bilayer QC was clean. The failed production legs are kept under
+`systems/<start>/failed_prod_lincs4/` and are **not** used for anything. The production
+legs are watched continuously for any recurrence.
