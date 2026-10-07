@@ -1,0 +1,32 @@
+# trajectories and checkpoints
+*.xtc
+*.trr
+*.cpt
+*.edr
+*.tpr
+*.log
+!examples/**/expected*.log
+
+# raw downloads (regenerate with structures/fetch.sh)
+structures/raw/
+
+# PLUMED state and kernels (can reach GB; keep only if small)
+KERNELS*
+STATE*
+
+# large COLVAR files — keep a strided copy in results/ instead
+COLVAR
+COLVAR_*
+
+# environment / local builds (rebuild with env/build_*.sh)
+__pycache__/
+*.pyc
+.venv/
+opt/
+vendor/
+logs/
+scratch_*/
+\#*\#
+
+# the runbook lives with the lab, not in the repo
+instructions.md

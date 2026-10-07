@@ -1,0 +1,11 @@
+# ORCA (PSU Research Computing, login.orca.pdx.edu), Rocky 9, zen4, L40S/A30.
+# There is NO gromacs or plumed module on ORCA (checked 2026-10-07: `module avail`).
+# Everything below is user-space under /scratch/kuhfeldr-Kuhfeld_temp.
+source /etc/profile.d/z00_lmod.sh
+module load spack/v1.1.1            # only used to (re)build GROMACS
+# runtime: no module loads needed; the default StdEnv provides cuda/12.9.0 and openmpi/5.0.8
+source /scratch/kuhfeldr-Kuhfeld_temp/oprm1-opes-activation/env/plumed_env.sh
+# system building (AmberTools 26, packmol-memgen, pdb2pqr, parmed):
+#   /scratch/kuhfeldr-Kuhfeld_temp/miniforge3/envs/mor-pilot
+# analysis/CV tooling (gemmi, MDAnalysis, numpy):
+#   /scratch/kuhfeldr-Kuhfeld_temp/miniforge3/envs/oprm1-opes
