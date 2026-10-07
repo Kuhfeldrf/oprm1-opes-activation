@@ -1,0 +1,21 @@
+; 1000 steps in vacuum: machinery check only (see README). 1 fs, no constraints needed.
+integrator      = md
+dt              = 0.001
+nsteps          = 1000
+cutoff-scheme   = Verlet
+pbc             = xyz
+coulombtype     = reaction-field
+epsilon-rf      = 0
+rcoulomb        = 1.2
+rvdw            = 1.2
+constraints     = h-bonds
+tcoupl          = v-rescale
+tc-grps         = System
+tau-t           = 0.1
+ref-t           = 310
+gen-vel         = yes
+gen-temp        = 310
+gen-seed        = 20261007
+nstxout-compressed = 0
+nstenergy       = 100
+nstlog          = 100

@@ -95,6 +95,8 @@ def main():
     ap.add_argument("--root", type=Path, default=Path("systems"))
     ap.add_argument("--starts", nargs="+", default=["active", "inactive"])
     ap.add_argument("--hmr", type=float, default=3.024)
+    ap.add_argument("--write", nargs="+", default=None,
+                    help="starts to build outputs for (composition still uses all --starts)")
     a = ap.parse_args()
 
     data = {}
@@ -106,12 +108,47 @@ def main():
         print(s, {k: len(v) for k, v in g.items()}, "receptor atoms", len(rec),
               "DAM atoms", len(dam))
 
+    # ---------------- solute charge measured by tleap, not estimated (packmol-memgen's
+    # estimate ignored DAMGO's +1 and under-counted Cl- by one)
+    q_sol = {}
+    for s in a.starts:
+        D = a.root / s
+        rec = [l[:12] + " C  " + l[16:] if l[17:20] == "NME" and l[12:16].strip() == "CH3"
+               else l for l in data[s][0]]
+        (D / "tl_solute.pdb").write_text("\n".join(rec) + "\nTER\n" + "\n".join(
+            l[:17] + "DAM L   1" + l[26:] for l in data[s][1]) + "\nTER\nEND\n")
+        (D / "tl_solute.leap").write_text(f"""
+source leaprc.protein.ff19SB
+source leaprc.gaff2
+loadamberparams {MOL2}/damgo.frcmod
+DAM = loadmol2 {MOL2}/damgo.mol2
+x = loadpdb tl_solute.pdb
+bond x.{SS[0] - OFFSET}.SG x.{SS[1] - OFFSET}.SG
+charge x
+quit
+""")
+        r = subprocess.run(["tleap", "-f", "tl_solute.leap"], cwd=D, capture_output=True,
+                           text=True)
+        m = re.search(r"Total unperturbed charge:\s+(-?[\d.]+)", r.stdout) or \
+            re.search(r"Total charge of .*?:\s*(-?[\d.]+)", r.stdout)
+        if not m:
+            sys.exit(f"FATAL: could not read solute charge for {s}:\n{r.stdout[-800:]}")
+        q_sol[s] = round(float(m.group(1)))
+    if len(set(q_sol.values())) != 1:
+        sys.exit(f"FATAL: solute charge differs between starts {q_sol}")
+    qs = q_sol[a.starts[0]]
+    print("solute net charge (tleap):", qs)
+
     # ---------------- identical composition: common minimum, converting water->ion if short
     species = ["POPC", "CHL", "Na+", "Cl-"]
     target = {sp: min(len(data[s][2][sp]) for s in a.starts) for sp in species}
-    # neutrality: keep Na-Cl difference identical (solute identical), use the max ion count
-    for ion in ("Na+", "Cl-"):
-        target[ion] = max(len(data[s][2][ion]) for s in a.starts)
+    # neutral and identical: Na = max over starts, Cl = Na + q_solute
+    target["Na+"] = max(len(data[s][2]["Na+"]) for s in a.starts)
+    target["Cl-"] = target["Na+"] + qs
+    for s in a.starts:
+        for ion in ("Na+", "Cl-"):
+            if len(data[s][2][ion]) > target[ion]:
+                sys.exit(f"FATAL: {s} has more {ion} than the neutral target; not handled")
     reports = {}
     for s in a.starts:
         rec, dam, g = data[s]
@@ -162,7 +199,7 @@ def main():
     print("composition (identical):", comps[a.starts[0]])
 
     # ---------------- per start: write pieces, tleap, verify, convert, HMR
-    for s in a.starts:
+    for s in (a.write or a.starts):
         D = a.root / s
         rec, dam, g = data[s]
         rep = reports[s]
@@ -173,6 +210,9 @@ def main():
                 box = np.array(v[3:]) - np.array(v[:3])
         rep["box_A"] = box.round(2).tolist()
 
+        # ff19SB names the NME methyl carbon "C" (ACE's is "CH3"); normalise older packs
+        rec = [l[:12] + " C  " + l[16:] if l[17:20] == "NME" and l[12:16].strip() == "CH3"
+               else l for l in rec]
         (D / "tl_receptor.pdb").write_text(
             "\n".join(l for l in rec if (l[76:78].strip() or l[12:16].strip()[0]) != "H")
             + "\nTER\nEND\n")
@@ -214,7 +254,7 @@ quit
         amb = parmed.load_file(str(D / "system.parm7"), xyz=str(D / "system.rst7"))
         q = sum(x.charge for x in amb.atoms)
         rep["net_charge"] = round(q, 4)
-        if abs(q) > 1e-3:
+        if abs(q) > 1e-3:  # DAMGO mol2 renormalised to exactly +1 (structures/params)
             sys.exit(f"FATAL: {s} not neutral ({q:+.4f})")
         # contiguity: receptor then DAM first
         names = [res.name for res in amb.residues]
@@ -309,7 +349,7 @@ quit
             if mname:
                 atoms_sec = b.split("[ atoms ]")[1].split("[")[0]
                 rows = [l.split() for l in atoms_sec.splitlines()
-                        if l.strip() and not l.strip().startswith(";")]
+                        if l.split() and l.split()[0].isdigit()]  # skips ; and #ifdef lines
                 resn = {r[3] for r in rows}
                 if resn & (AA | {"DAM"}) and not resn & {"WAT", "PA", "CHL"}:
                     itp = f"posre_{mname.group(1)}.itp"

@@ -13,5 +13,3 @@ constraints             = h-bonds
 constraint-algorithm    = lincs
 lincs-order             = 4
 lincs-iter              = 1
-; three coupling groups so a cold solute cannot hide behind hot solvent
-tc-grps                 = Solute MEMB SOLV

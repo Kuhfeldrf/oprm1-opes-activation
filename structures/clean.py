@@ -330,7 +330,8 @@ def main():
             if n == LAST:
                 for at in r:
                     if at.name in ("N", "CA"):
-                        lines.append(atom("CH3" if at.name == "CA" else at.name, "NME", "R", n,
+                        # ff19SB (aminoct12.lib) names the NME methyl carbon "C", not "CH3"
+                        lines.append(atom("C" if at.name == "CA" else at.name, "NME", "R", n,
                                           at.pos.tolist(), at.element.name))
                 continue
             resn = r.name

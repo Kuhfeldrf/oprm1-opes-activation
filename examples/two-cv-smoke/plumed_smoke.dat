@@ -1,0 +1,13 @@
+# plumed_smoke.dat — both CV types, trivially biased (runbook §7.4). Same CV definitions,
+# atom selections and RMSD reference as production; only the system is trimmed.
+MOLINFO STRUCTURE=system_ref.pdb MOLTYPE=protein
+WHOLEMOLECULES ENTITY0=1-4561 ENTITY1=4562-4634
+
+d_tm36:     DISTANCE ATOMS=@CA-167,@CA-281
+rmsd_npxxy: RMSD REFERENCE=ref_inactive_npxxy.pdb TYPE=OPTIMAL
+
+# restraints deliberately off the current values so motion is visible
+r1: RESTRAINT ARG=d_tm36     AT=1.00 KAPPA=2000.0
+r2: RESTRAINT ARG=rmsd_npxxy AT=0.20 KAPPA=2000.0
+
+PRINT ARG=d_tm36,rmsd_npxxy,r1.bias,r2.bias FILE=COLVAR_smoke STRIDE=10

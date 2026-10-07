@@ -1,0 +1,11 @@
+{
+  "comment": "t=0 values are fixed by solute.gro (minimised active system); later values vary with thread count and hardware, so only their direction and non-zero bias are checked",
+  "min_rows": 100,
+  "cv1_start_nm": 1.1990,
+  "cv2_start_nm": 0.3844,
+  "tol_start_nm": 0.002,
+  "min_change_nm": 0.02,
+  "reference_run": {"host": "ORCA login node, 4 OpenMP threads", "wall_s": 5.6,
+                    "cv1_nm": [1.198951, 1.065319], "cv2_nm": [0.384432, 0.305006],
+                    "r1_bias_kJ": [39.58, 4.27], "r2_bias_kJ": [34.02, 11.03]}
+}

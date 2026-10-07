@@ -136,3 +136,48 @@ used instead of CHARMM36m. Reasons:
    from the cluster.
 
 Every system and replica uses this one force field.
+
+### Stage 4 — System preparation (§8), Day 1
+
+**Pack:** packmol-memgen, POPC:CHL1 7:3 (30 mol% cholesterol), 150 mM NaCl, xy fixed at
+95 Å for both starts, with the parent repo's calibrated settings (`--pbc`,
+`apl_offset 1.15`, `nloop 200/40`). As with the parent's validated DAMGO pack, packmol
+stopped at its iteration ceiling short of tolerance. Minimisation and restrained NPT are
+what resolve this; whether they succeed is checked in the equilibration diagnostics.
+
+**Silent traps hit and handled in `systems/build_topology.py`:**
+1. **Charge.** packmol-memgen's charge estimate (+12) **ignored DAMGO's +1**. The
+   true solute charge from tleap is **+13**, and a naive build is +1 non-neutral
+   (caught by the neutrality assertion). The builder now measures the solute charge
+   with tleap and sets Cl⁻ from it.
+2. **DAMGO mol2 charges summed to +1.0020**, not +1, inherited from the parent; the
+   parent's runs carried a 0.002 e net charge. Renormalised to exactly +1
+   (−2.7×10⁻⁵ e/atom, `structures/params/renormalize_charge.py`; original kept).
+3. **ff19SB's NME methyl carbon is named `C`**, not `CH3` (ACE's is `CH3`), and
+   tleap aborts on it. Fixed in `clean.py` and normalised in the builder.
+4. **Renumbering.** packmol-memgen renumbers the receptor from 1 (ACE68 → 1), and so
+   does tleap. `system_ref.pdb` is written with **canonical numbers restored** (+67) and
+   asserted against D166/R167/Y168/T281/N334–A339. PLUMED MOLINFO reports chain R =
+   residues 68–347.
+5. **Topology order** is receptor (1–4561), then DAMGO (4562–4634), then lipids,
+   waters and ions. tleap's `combine` would otherwise append the ligand after the
+   solvent.
+
+**Identical composition (both starts):** 194 POPC, 84 CHL, 11,903 OPC waters, 20 Na⁺,
+33 Cl⁻, 1 DAMGO; 84,511 atoms; box 95 × 95 × 86 Å. Adjustments to reach it:
+- active: −12 waters, +1 Cl⁻ from water;
+- inactive: −1 POPC from the fuller (upper) leaflet, farthest from the receptor, plus
+  Na⁺/Cl⁻ from bulk waters;
+- in both, molecules were removed from or converted in bulk, farthest from the receptor.
+
+The system is ~85k atoms instead of the runbook's ~150k target. It is smaller because
+the box is sized from the receptor (≥20 Å water beyond protein), and smaller is faster.
+
+**HMR:** hydrogen mass 3.024 amu on solute and lipids (not water), which allows a 4 fs
+timestep in production. This is a deviation from a plain 2 fs protocol, chosen for
+throughput. Heating and the first three NPT stages still run at 2 fs.
+
+**PLUMED selector validation (§7.1),** `plumed driver --igro systems/active/system.gro`:
+d_tm36 = 1.2236 nm, matching the deposited 10TM value of 12.24 Å, so `@CA-167`/`@CA-281`
+resolve to the right atoms. d_hbond = 1.2235 nm (deposited 12.23 Å). d_salt =
+0.437 nm, na_site = 0 (no Na⁺ at D2.50 in active, as expected), lig_cont = 349.

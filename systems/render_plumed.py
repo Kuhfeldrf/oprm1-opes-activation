@@ -3,6 +3,7 @@
 Usage: python systems/render_plumed.py <system_dir> <template> <out> [KEY=VALUE ...]
 Indices are never typed by hand: they come from the topology the run uses."""
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -29,7 +30,7 @@ if "@RECEPTOR_HEAVY_GROUP@" in txt:
     txt = txt.replace("MOLINFO", f"rec_heavy: GROUP NDX_FILE={D/'index.ndx'} NDX_GROUP=Receptor_heavy\nMOLINFO", 1)
 for k, v in subs.items():
     txt = txt.replace(f"@{k}@", str(v))
-left = [w for w in txt.split() if w.count("@") >= 2 and w.startswith("@") and w.endswith("@")]
+left = sorted(set(re.findall(r"@[A-Z][A-Z_]*@", txt)))
 if left:
     sys.exit(f"FATAL: unfilled placeholders {left}")
 out.write_text(txt)
