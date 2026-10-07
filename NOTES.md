@@ -181,3 +181,39 @@ throughput. Heating and the first three NPT stages still run at 2 fs.
 d_tm36 = 1.2236 nm, matching the deposited 10TM value of 12.24 Å, so `@CA-167`/`@CA-281`
 resolve to the right atoms. d_hbond = 1.2235 nm (deposited 12.23 Å). d_salt =
 0.437 nm, na_site = 0 (no Na⁺ at D2.50 in active, as expected), lig_cont = 349.
+
+### Multi-walker OPES machinery test — a silent failure caught (Day 1)
+
+Test: 2 walkers, `WALKERS_MPI`, `gmx_mpi -multidir` (spack GROMACS 2025.3 +mpi with MPI
+PLUMED kernel, **native** `-plumed` interface), 20 ps from the active NVT frame.
+
+- It ran: GPU-aware MPI, one A30 per walker, **~360 ns/day per walker at 4 fs with PLUMED
+  attached**. PLUMED accounts for 27% of wall time.
+- **But the bias was not shared.** Walkers sharing one OPES bias must report identical
+  `opes.nker`, `opes.zed` and `opes.rct`. They reported nker 32 vs 30 and zed 0.196 vs
+  0.261. PLUMED's log says only "WALKERS_MPI: if multiple replicas are present…", with no
+  walker count. GROMACS 2025's native PLUMED interface does not hand PLUMED the
+  multi-simulation communicator, so each walker silently ran its own independent OPES.
+  No error or warning is raised. A production "4-walker" run would have been 4 unshared
+  biases, converging ~4× slower than planned, with nothing in the output saying so.
+- **Response:** build GROMACS **2025.0 patched with PLUMED 2.10.1** (classic
+  `plumed patch --runtime`, which wires the multisim communicator),
+  `env/build_gromacs_plumed_patched.sh`. 2025.0 is the newest version PLUMED 2.10.1
+  can patch. The unbiased endpoint legs keep the native-interface 2025.3 build, which
+  is correct for single-simulation runs.
+- **Acceptance test for the patched build:** the same 2-walker test must show
+  identical `opes.nker`/`opes.zed`/`opes.rct` in both walkers' COLVAR at every line.
+
+**Patched build: acceptance test passed.** GROMACS 2025.0 + PLUMED 2.10.1 patch
+(`env/plumed_env_patched.sh`). PLUMED now logs "using multiple walkers, number of
+walkers: 2". `opes.rct`, `opes.zed` and `opes.nker` are **identical in both walkers on
+101/101 lines**, while d_tm36 differs on 100/101 lines (independent configurations, one
+shared bias). Throughput is ~400 ns/day per walker (A30, 4 fs, PLUMED attached).
+
+Two more wrinkles:
+- **2025.0's grompp mis-parses ParmEd's multi-line ff19SB `[ cmaptypes ]`** ("Unknown
+  atomtype found at position 2 in cmap type"); 2025.3's does not. Workaround: grompp
+  with 2025.3 (`$GMX_GROMPP`), mdrun with patched 2025.0. 2025.0 reads 2025.3 tprs
+  (verified: `gmx_mpi dump` → natoms 84511).
+- In multi-sim mode PLUMED writes `COLVAR.<k>`, and only walker 0 writes
+  KERNELS/STATE. Restarts point every walker at `w0/STATE`.

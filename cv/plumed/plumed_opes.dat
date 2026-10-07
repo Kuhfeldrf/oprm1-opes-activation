@@ -3,7 +3,7 @@
 # defaults: they are set from the measured unbiased endpoint statistics (cv_definition.md).
 # Units: nm, kJ/mol. TEMP must equal the thermostat (310 K). Multi-walker via WALKERS_MPI
 # (gmx_mpi -multidir, one directory per walker, all sharing this bias).
-RESTART=@RESTART@
+@RESTART_LINE@
 MOLINFO STRUCTURE=@SYSTEM_REF@ MOLTYPE=protein
 WHOLEMOLECULES ENTITY0=1-@RECEPTOR_LAST@ ENTITY1=@DAM_FIRST@-@DAM_LAST@
 rec_heavy: GROUP NDX_FILE=@INDEX@ NDX_GROUP=Receptor_heavy
