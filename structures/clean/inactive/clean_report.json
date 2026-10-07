@@ -1,0 +1,97 @@
+{
+ "start": "inactive",
+ "source": "9PXU",
+ "chain": "R",
+ "deleted_chains": [
+  "C",
+  "H",
+  "K",
+  "L"
+ ],
+ "deleted_hetero_in_receptor_chain": [
+  "A1APV501"
+ ],
+ "deleted_residues_outside_range": "348..354 (7 residues)",
+ "completed_sidechains": [
+  "ARG184:6",
+  "ARG213:6",
+  "ARG275:6",
+  "ARG279:6",
+  "ARG97:6",
+  "GLN214:4",
+  "GLU231:4",
+  "GLU272:4",
+  "GLU312:4",
+  "GLU343:4",
+  "ILE71:3",
+  "ILE79:3",
+  "LEU131:3",
+  "LYS100:4",
+  "LYS102:4",
+  "LYS176:4",
+  "LYS211:4",
+  "LYS262:4",
+  "LYS271:2",
+  "LYS273:4",
+  "MET266:2",
+  "PHE340:6",
+  "SER224:1",
+  "SER263:1",
+  "SER268:1",
+  "SER270:1",
+  "THR222:2",
+  "THR309:2",
+  "THR313:2",
+  "THR314:2",
+  "THR317:2",
+  "THR69:2",
+  "TYR212:7",
+  "VAL308:2"
+ ],
+ "reverted": [
+  "LEU266->MET",
+  "ARG271->LYS"
+ ],
+ "opm_scaffold_rmsd_A": 1.339,
+ "opm_scaffold_atoms": 134,
+ "damgo_transplant_scaffold_rmsd_A": 1.387,
+ "damgo_template_vs_10TM_heavy_rmsd_A": 0.733,
+ "damgo_min_heavy_dist_A": 2.32,
+ "damgo_heavy_contacts_lt_2.5A": [
+  "GLN126:NE2"
+ ],
+ "damgo_N1_to_D149_OD_min_A": 4.66,
+ "na_to_D116_OD_min_A": [
+  2.41
+ ],
+ "propka_D116_D2.50": "ASP",
+ "propka_H299_H6.52": "HID",
+ "propka_disagreements_between_starts": {
+  "ASP116": {
+   "active": "ASH",
+   "inactive": "ASP"
+  },
+  "HIS173": {
+   "active": "HIE",
+   "inactive": "HID"
+  }
+ },
+ "final_states_nondefault": {
+  "HIS173": "HID",
+  "HIS225": "HID",
+  "HIS299": "HID",
+  "HIS321": "HID"
+ },
+ "disulfides": [
+  [
+   142,
+   219
+  ]
+ ],
+ "CV1_CA_A": 6.58,
+ "CV2_vs_9PXU_A": 0.0,
+ "receptor_CA_z_range_A": [
+  -36.5,
+  29.5
+ ]
+}

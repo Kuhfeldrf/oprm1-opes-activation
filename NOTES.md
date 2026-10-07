@@ -62,11 +62,11 @@ receptor chain, and every author chain ID matches §6.5.
 | Entry | Runbook said | Found |
 |---|---|---|
 | 9MQH | 72–354 modelled, gap 225–226, M266L/K271R | ✔ as stated |
-| 9MQJ | completeness not verified | 67–354, gap 225–226, M266L/K271R. **Title: "Locally-refined … with Nb6M, NabFab, and isoquinuclidine compound #020_E1"** — #020_E1 is from the same isoquinuclidine series as 9MQH's allosteric #33, so calling it an "antagonist" in §4.2 needs checking against the paper before it is described that way. |
+| 9MQJ | completeness not verified | 67–354, gap 225–226, M266L/K271R. Title: "Locally-refined … with Nb6M, NabFab, and isoquinuclidine compound #020_E1". GPCRdb annotates #020_E1 as **Antagonist**, consistent with §4.2. |
 | 9MQI | completeness not verified | 67–354, gap 225–226, M266L/K271R; partners Nb (C) + Fab (H, L) present |
 | 9PXU | T281/NPxxY not verified | **receptor 68–354 fully resolved, no gaps**; T281 and NPxxY present. **Also carries M266L, K271R** (not listed in §4.2). BRIL is in auth chain R at negative numbers (−108…−8). **A Na⁺ ion is modelled** (sodium site). Partners: Nb (C), K, Fab (H, L). |
 | 10TM | R,F chains; F158W | ✔. Two receptor copies (R, F), each with DAMGO (S, H). **No G protein or nanobody in the model.** Resolved 66–347. CLR modelled. |
-| 9PPQ | state not confirmed | Receptor 67–352, no gaps, no SEQADV. On deposited coordinates it **clusters with the active structures** (below). |
+| 9PPQ | state not confirmed | Receptor 67–352, no gaps, no SEQADV. **GPCRdb: state Active, ligand 0505 Agonist** (queried 2026-10-07), and on deposited coordinates it clusters with the active structures (below). §15 gap closed. |
 | 8F7Q | numbering inferred | DBREF read directly: P35372 2–388, canonical. **Carries F158W (SEQADV "conflict")**, which the runbook missed — revert if 8F7Q is ever used. |
 | 8Y72 | R chain, cross-check | ✔. No receptor SEQADV. |
 
@@ -100,8 +100,12 @@ TM1–TM5 scaffold Cα (134 atoms), then take the RMSD of NPxxYA Cα with no ref
   is stable across states, as §7.2 requires.
 - 10TM, without a G protein, has a slightly smaller TM6 opening (12.2 Å) than the
   Gi-bound structures (13.0–13.2 Å). It is still fully on the active side.
-- 9PPQ is geometrically active-like. That is evidence, not confirmation; GPCRdb's state
-  annotation was not checked. It is not used as a start.
+- 9PPQ is geometrically active-like, and GPCRdb independently annotates it Active. It is
+  not used as a start.
+- GPCRdb annotates naloxone in 9PXU as "Agonist (partial)", an odd label for a
+  prototypical MOR antagonist. Irrelevant here because naloxone is deleted, but if 9PXU
+  is ever used as an "antagonist-bound" control (Option B), cite the pharmacology, not
+  the GPCRdb tag.
 - In every inactive structure, R167–T281 sidechain distance is 4.4–5.5 Å, consistent
   with the R3.50–T6.34 hydrogen bond being formed or nearly formed at 3.9 Å resolution.
 

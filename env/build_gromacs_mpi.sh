@@ -20,7 +20,7 @@ spack -e "$SPACK_ENV" config add "config:build_jobs:32"
 spack -e "$SPACK_ENV" add "gromacs@2025.3 +cuda cuda_arch=80,89 +mpi +openmp ^openmpi@5.0.8"
 spack -e "$SPACK_ENV" concretize -f 2>&1 | tail -20
 spack -e "$SPACK_ENV" install --fail-fast -j32
-spack -e "$SPACK_ENV" find -lvd gromacs | head -5
+spack -e "$SPACK_ENV" find -lvd gromacs > "$ROOT/env/gromacs_mpi_spec.txt"
 P=$(spack -e "$SPACK_ENV" location -i gromacs)
 echo "PREFIX $P"
 ls "$P/bin"

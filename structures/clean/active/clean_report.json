@@ -1,0 +1,67 @@
+{
+ "start": "active",
+ "source": "10TM",
+ "chain": "R",
+ "deleted_chains": [
+  "F",
+  "H",
+  "S"
+ ],
+ "deleted_hetero_in_receptor_chain": [
+  "CLR401",
+  "CLR402"
+ ],
+ "deleted_residues_outside_range": "66..67 (2 residues)",
+ "completed_sidechains": [
+  "GLU272:4",
+  "LYS262:4",
+  "LYS271:4",
+  "LYS273:4",
+  "LYS346:4",
+  "PHE158:2",
+  "PHE340:6",
+  "SER224:1",
+  "SER270:1",
+  "VAL264:2"
+ ],
+ "reverted": [
+  "TRP158->PHE"
+ ],
+ "opm_scaffold_rmsd_A": 0.51,
+ "opm_scaffold_atoms": 134,
+ "damgo_transplant_scaffold_rmsd_A": 0.0,
+ "damgo_template_vs_10TM_heavy_rmsd_A": 0.733,
+ "damgo_min_heavy_dist_A": 3.05,
+ "damgo_heavy_contacts_lt_2.5A": [],
+ "damgo_N1_to_D149_OD_min_A": 3.86,
+ "propka_D116_D2.50": "ASH",
+ "propka_H299_H6.52": "HID",
+ "propka_disagreements_between_starts": {
+  "ASP116": {
+   "active": "ASH",
+   "inactive": "ASP"
+  },
+  "HIS173": {
+   "active": "HIE",
+   "inactive": "HID"
+  }
+ },
+ "final_states_nondefault": {
+  "HIS173": "HID",
+  "HIS225": "HID",
+  "HIS299": "HID",
+  "HIS321": "HID"
+ },
+ "disulfides": [
+  [
+   142,
+   219
+  ]
+ ],
+ "CV1_CA_A": 12.24,
+ "CV2_vs_9PXU_A": 3.78,
+ "receptor_CA_z_range_A": [
+  -33.7,
+  28.9
+ ]
+}
