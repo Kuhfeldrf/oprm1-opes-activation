@@ -270,3 +270,9 @@ large time steps. The equilibrated `npt_10` states are kept: deviations stayed ~
 throughout and the bilayer QC was clean. The failed production legs are kept under
 `systems/<start>/failed_prod_lincs4/` and are **not** used for anything. The production
 legs are watched continuously for any recurrence.
+
+### Repository visibility
+
+2026-10-07: the repository owner approved pushing to the **public** GitHub repo
+(`Kuhfeldrf/oprm1-opes-activation`). This supersedes the runbook's §12.5 private-first
+instruction. Pushes follow each stage gate from here on.
