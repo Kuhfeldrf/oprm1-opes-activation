@@ -217,3 +217,27 @@ Two more wrinkles:
   (verified: `gmx_mpi dump` → natoms 84511).
 - In multi-sim mode PLUMED writes `COLVAR.<k>`, and only walker 0 writes
   KERNELS/STATE. Restarts point every walker at `w0/STATE`.
+
+### Bilayer embedding check (user request, Day 1)
+
+The receptor is embedded exactly as in `MOR_demo_analysis` and the parent ORCA runs:
+packmol-memgen, ff19SB + Lipid21 + OPC, POPC:CHL1 7:3, apl_offset 1.15, nloop 200/40,
+`--pbc`, OPM orientation, 150 mM NaCl. `analysis/membrane_qc.py` checks per frame:
+P–P thickness, area per lipid (receptor footprint subtracted), receptor centring and
+tilt, lipid atoms inside the TM bundle, water in the hydrophobic core, and TM helicity.
+
+| active frame | P–P (Å) | APL (Å²) | lipids in bundle | core water | TM helix frac |
+|---|---|---|---|---|---|
+| as built | 38.1 | 58.7 | 0 | 0 | 0.88 |
+| npt_1000 (1 ns) | 40.7 | — | 0 | 7 | 0.90 |
+| npt_200 (3 ns) | 41.1 | 53.0 | 0 | 0 | 0.90 |
+
+Leaflets are balanced at 139/139 (POPC+CHL). The receptor TM core sits 3 Å below the
+midplane, and the bundle axis is tilted ~22°. APL is still falling, as intended for
+the deliberately under-packed build. It must plateau in the unbiased leg before
+biasing; the QC is rerun over both 100 ns legs at the §6.4 decision point.
+
+**4 fs + Lipid21:** grompp warns that the oleoyl C=C bond's period (20 fs) is exactly
+5 × dt. HMR does not touch heavy–heavy bonds; Lipid21 is validated with HMR at 4 fs,
+and Verlet is stable well past this ratio. `equilibrate.sh` accepts **only** this
+"oscillational period" warning and fails on any other; there is no blanket `-maxwarn`.

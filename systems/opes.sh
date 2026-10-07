@@ -44,7 +44,7 @@ for ((k=0; k<NW; k++)); do
         <(cat $ROOT/systems/mdp/_common.mdp $ROOT/systems/mdp/prod.mdp) > $W/opes.mdp
     # trajectory every 100 ps is kept; COLVAR carries the CV time series at 2 ps
     $GMX_GROMPP grompp -f $W/opes.mdp -c $W/start.gro -p $SYS/system.top -n $SYS/index.ndx \
-        -o $W/opes.tpr -po $W/mdout.mdp -quiet
+        -o $W/opes.tpr -po $W/mdout.mdp -quiet -maxwarn 1   # Lipid21 C=C at 4 fs, see equilibrate.sh
     echo "walker $k from t=$T0 ps of $START unbiased leg" > $W/origin.txt
   fi
   # with WALKERS_MPI only walker 0 writes KERNELS/STATE; on restart every walker reads it.
