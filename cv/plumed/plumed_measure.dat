@@ -1,0 +1,23 @@
+# plumed_measure.dat — CV measurement only, NO bias (runbook §7.3).
+# Rendered per system by systems/render_plumed.py; @...@ are filled from build_report.json.
+# Units: nm, kJ/mol, rad. Human P35372 numbering (system_ref.pdb is canonical, §7.1).
+MOLINFO STRUCTURE=@SYSTEM_REF@ MOLTYPE=protein
+WHOLEMOLECULES ENTITY0=1-@RECEPTOR_LAST@ ENTITY1=@DAM_FIRST@-@DAM_LAST@
+
+# CV1: TM3-TM6 Calpha distance, Arg167(3.50) - Thr281(6.34)
+d_tm36: DISTANCE ATOMS=@CA-167,@CA-281
+# CV2: NPxxYA (334-339) Calpha displacement vs INACTIVE reference; TM1-5 scaffold aligns
+#      (occupancy), NPxxYA displaces (beta) - dual-weight reference, §7.2
+rmsd_npxxy: RMSD REFERENCE=@RMSD_REF@ TYPE=OPTIMAL
+
+# ---- secondary observables: recorded, never biased (§6.4)
+d_hbond:  DISTANCE ATOMS=@CZ-167,@OG1-281          # R3.50-T6.34 sidechain H-bond
+chi_w295: TORSION ATOMS=@chi1-295                  # W6.48 toggle switch
+# ligand retention: DAMGO N-terminal amine to D149(3.32) carboxylate carbon
+d_salt:   DISTANCE ATOMS=@DAM_N1@,@CG-149
+# Na+ in the D2.50 pocket: coordination of any Na+ with D116 carboxylate carbon
+na_site:  COORDINATION GROUPA=@CG-116 GROUPB=@NA_LIST@ R_0=0.40 NN=12 MM=24
+# DAMGO heavy-atom contacts with receptor heavy atoms within ~0.45 nm
+lig_cont: COORDINATION GROUPA=@DAM_HEAVY@ GROUPB=@RECEPTOR_HEAVY_GROUP@ R_0=0.45 NN=6 MM=12 NLIST NL_CUTOFF=1.0 NL_STRIDE=20
+
+PRINT ARG=d_tm36,rmsd_npxxy,d_hbond,chi_w295,d_salt,na_site,lig_cont FILE=COLVAR_measure STRIDE=@STRIDE@

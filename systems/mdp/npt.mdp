@@ -1,0 +1,20 @@
+; staged restraint release; dt and nsteps and POSRES_FC filled per stage
+integrator              = md
+dt                      = @DT@
+nsteps                  = @NSTEPS@
+tcoupl                  = v-rescale
+tau-t                   = 1.0 1.0 1.0
+ref-t                   = 310 310 310
+; semi-isotropic: bilayer xy and z scale independently
+pcoupl                  = C-rescale
+pcoupltype              = semiisotropic
+tau-p                   = 5.0
+ref-p                   = 1.0 1.0
+compressibility         = 4.5e-5 4.5e-5
+refcoord-scaling        = com
+gen-vel                 = no
+continuation            = yes
+define                  = -DPOSRES -DPOSRES_FC=@FC@
+nstlog                  = 5000
+nstenergy               = 5000
+nstxout-compressed      = 0

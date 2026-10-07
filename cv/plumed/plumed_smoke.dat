@@ -1,0 +1,12 @@
+# plumed_smoke.dat — 1000 steps, confirms bias is applied and BOTH CVs respond (§7.4).
+MOLINFO STRUCTURE=@SYSTEM_REF@ MOLTYPE=protein
+WHOLEMOLECULES ENTITY0=1-@RECEPTOR_LAST@ ENTITY1=@DAM_FIRST@-@DAM_LAST@
+
+d_tm36:     DISTANCE ATOMS=@CA-167,@CA-281
+rmsd_npxxy: RMSD REFERENCE=@RMSD_REF@ TYPE=OPTIMAL
+
+# trivial restraints, deliberately off the current value so motion is visible
+r1: RESTRAINT ARG=d_tm36     AT=@SMOKE_D_AT@ KAPPA=500.0
+r2: RESTRAINT ARG=rmsd_npxxy AT=0.20 KAPPA=500.0
+
+PRINT ARG=d_tm36,rmsd_npxxy,r1.bias,r2.bias FILE=COLVAR_smoke STRIDE=10

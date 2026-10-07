@@ -1,0 +1,16 @@
+; 500 ps heating at 2 fs with solute heavy-atom restraints
+integrator              = md
+dt                      = 0.002
+nsteps                  = 250000
+tcoupl                  = v-rescale
+tau-t                   = 1.0 1.0 1.0
+ref-t                   = 310 310 310
+pcoupl                  = no
+gen-vel                 = yes
+gen-temp                = 310
+gen-seed                = @SEED@
+continuation            = no
+define                  = -DPOSRES -DPOSRES_FC=1000.0
+nstlog                  = 5000
+nstenergy               = 5000
+nstxout-compressed      = 0

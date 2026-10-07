@@ -1,0 +1,40 @@
+# plumed_opes.dat — OPES_METAD over the two activation coordinates (runbook §7.5, §9).
+# Rendered per run by systems/render_plumed.py. SIGMA and wall positions are NOT
+# defaults: they are set from the measured unbiased endpoint statistics (cv_definition.md).
+# Units: nm, kJ/mol. TEMP must equal the thermostat (310 K). Multi-walker via WALKERS_MPI
+# (gmx_mpi -multidir, one directory per walker, all sharing this bias).
+RESTART=@RESTART@
+MOLINFO STRUCTURE=@SYSTEM_REF@ MOLTYPE=protein
+WHOLEMOLECULES ENTITY0=1-@RECEPTOR_LAST@ ENTITY1=@DAM_FIRST@-@DAM_LAST@
+rec_heavy: GROUP NDX_FILE=@INDEX@ NDX_GROUP=Receptor_heavy
+
+d_tm36:     DISTANCE ATOMS=@CA-167,@CA-281
+rmsd_npxxy: RMSD REFERENCE=@RMSD_REF@ TYPE=OPTIMAL
+
+# ---- secondary observables, never biased
+d_hbond:  DISTANCE ATOMS=@CZ-167,@OG1-281
+chi_w295: TORSION ATOMS=@chi1-295
+d_salt:   DISTANCE ATOMS=@DAM_N1@,@CG-149
+na_site:  COORDINATION GROUPA=@CG-116 GROUPB=@NA_LIST@ R_0=0.40 NN=12 MM=24
+lig_cont: COORDINATION GROUPA=@DAM_HEAVY@ GROUPB=rec_heavy R_0=0.45 NN=6 MM=12 NLIST NL_CUTOFF=1.0 NL_STRIDE=20
+
+# ---- bias. BARRIER in kJ/mol (GROMACS units): 50 kJ/mol = 12 kcal/mol
+opes: OPES_METAD ...
+  ARG=d_tm36,rmsd_npxxy
+  PACE=500
+  BARRIER=@BARRIER@
+  SIGMA=@SIGMA@
+  TEMP=310
+  FILE=KERNELS
+  STATE_WFILE=STATE
+  STATE_WSTRIDE=125000
+  @STATE_RFILE@
+  CALC_WORK
+  @WALKERS@
+...
+
+# ---- walls: keep the bias out of unphysical territory (positions from measured endpoints)
+uw: UPPER_WALLS ARG=d_tm36,rmsd_npxxy AT=@UW@ KAPPA=2000.0,2000.0 EXP=2,2
+lw: LOWER_WALLS ARG=d_tm36,rmsd_npxxy AT=@LW@ KAPPA=2000.0,2000.0 EXP=2,2
+
+PRINT ARG=d_tm36,rmsd_npxxy,d_hbond,chi_w295,d_salt,na_site,lig_cont,opes.bias,opes.rct,opes.zed,opes.neff,opes.nker,opes.work,uw.bias,lw.bias FILE=COLVAR STRIDE=500

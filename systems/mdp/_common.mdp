@@ -1,0 +1,17 @@
+; shared by every stage; stage files append their own settings (systems/equilibrate.sh)
+cutoff-scheme           = Verlet
+nstlist                 = 20
+pbc                     = xyz
+coulombtype             = PME
+rcoulomb                = 1.0
+fourierspacing          = 0.12
+vdwtype                 = cutoff
+vdw-modifier            = potential-shift-verlet
+rvdw                    = 1.0
+DispCorr                = EnerPres
+constraints             = h-bonds
+constraint-algorithm    = lincs
+lincs-order             = 4
+lincs-iter              = 1
+; three coupling groups so a cold solute cannot hide behind hot solvent
+tc-grps                 = Solute MEMB SOLV

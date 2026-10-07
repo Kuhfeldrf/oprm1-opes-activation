@@ -30,3 +30,16 @@ scratch_*/
 
 # the runbook lives with the lab, not in the repo
 instructions.md
+structures/clean/*/receptor*
+structures/clean/*/pdb2pqr.log
+structures/clean.out
+systems/*/*.pdb
+!systems/*/system_ref.pdb
+systems/*/packmol*
+systems/*/*.json
+!systems/*/build_report.json
+systems/*/system.gro
+systems/*/system.parm7
+systems/*/system.rst7
+systems/*/*.gro
+systems/*/#*

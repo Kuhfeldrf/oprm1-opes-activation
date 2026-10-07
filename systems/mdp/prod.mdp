@@ -1,0 +1,21 @@
+; production (unbiased endpoint leg, and the base for OPES runs). HMR 3.024 amu -> 4 fs.
+integrator              = md
+dt                      = 0.004
+nsteps                  = @NSTEPS@
+tcoupl                  = v-rescale
+tau-t                   = 1.0 1.0 1.0
+ref-t                   = 310 310 310
+pcoupl                  = C-rescale
+pcoupltype              = semiisotropic
+tau-p                   = 5.0
+ref-p                   = 1.0 1.0
+compressibility         = 4.5e-5 4.5e-5
+gen-vel                 = no
+continuation            = yes
+nstlog                  = 25000
+nstenergy               = 25000
+nstcalcenergy           = 100
+; trajectory: solute + nearby environment is not separable cheaply, so: full system
+; every 100 ps (compressed). ~85k atoms x 1000 frames/100 ns ~ 1 GB per 100 ns.
+nstxout-compressed      = 25000
+compressed-x-grps       = System
