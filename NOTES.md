@@ -317,3 +317,48 @@ start):
   revised instead of spending more wall-clock. prod1 is kept as
   `runs/prod1_softwalls/` and is **not** used in any result.
 - **prod2** relaunched from scratch with the same walker starting frames.
+
+## Day 2 — prod2 monitoring snapshot at ~71 ns/walker (2026-10-08, 6.5 h wall-clock)
+
+284 ns aggregate per start; 260 ns/day per walker, so 375 ns/walker lands in about
+29 h more. Snapshot: `results/monitor_prod2_70ns.json`.
+
+- **The stiff walls hold.** Wall contact is ≤ 3.2% of frames in the active start. It is
+  ≤ 1.5% in the inactive start except walker 1 (8.6%, lower CV1 wall at 0.53 nm; it
+  sits at TM3–TM6 0.51–0.55 nm, tighter than the deposited inactive state).
+- **Ligand and Na⁺ are stable.** DAMGO contacts are ≥ 304 and d_salt ≤ 0.50 nm in all 8
+  walkers. Na⁺ stays seated in the inactive start (0.87–0.99) and absent in the active
+  start.
+- **Bias.** The nker growth is sublinear: active 1216→2496 and inactive 657→1104
+  across the quarters, so deposition is slowing. rct is still small (−2…+2 kJ/mol), so
+  the bias is far from filling the 50 kJ/mol BARRIER.
+- **Crossings: 0 in each direction.** CV1 and CV2 move independently:
+  - **CV1 crosses.** Active-start walker 0 spent 21% of its frames with TM3–TM6 inside
+    the inactive CV1 range (minimum 0.537 nm). Inactive-start walkers reached 1.05–1.08 nm,
+    near the active box edge (1.089).
+  - **CV2 does not follow.**
+    - In the active start, NPxxY RMSD never drops below 0.11 nm (inactive box ≤ 0.118).
+      Walker 0, with TM6 closed, has NPxxY at 0.42 nm, even further from inactive.
+    - In the inactive start, NPxxY never exceeds 0.27 nm (active box ≥ 0.265), and only
+      when CV1 is low.
+  - The CV1–CV2 correlation per walker is −0.46…+0.21. The walkers are filling the
+    off-diagonal corners (TM6 closed with NPxxY out; TM6 open with NPxxY in), not the
+    coupled path.
+
+Three questions:
+1. **Does it match what the runbook assumed?** Partly. Transitions in CV1 alone are
+   fast, as expected for a biased distance. But the TM7/NPxxY rearrangement is
+   hysteretic within the runtime: each start keeps its own NPxxY state. This is the
+   early form of the §8 "start-dependent FES / missing slow DOF" signature, not yet a
+   verdict. The bias is far below BARRIER, and OPES fills orthogonal directions before
+   committing to a coupled path.
+2. **Is the next step still right?** Yes, continue to the planned 375 ns/walker; there is no
+   reason to stop (no wall pinning, no ligand loss, no fold loss). If CV2 is still
+   start-locked at the end, the verdict records that NPxxY/TM7 (and possibly the Na⁺
+   site, which correlates with it in the inactive start) needs an extra or better CV.
+   I will not change parameters mid-run.
+3. **What would failure look like at the end?**
+   - Zero committed crossings in either direction.
+   - Two FESs that differ by > 2 kcal/mol in the CV2 direction, each with a minimum at
+     its own starting NPxxY value.
+   - rct still rising in the last quarter.

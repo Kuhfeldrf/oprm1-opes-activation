@@ -1,0 +1,190 @@
+{
+ "active": {
+  "walkers": [
+   {
+    "file": "COLVAR.0",
+    "ns": 71.12,
+    "d_tm36_range": [
+     0.537,
+     1.319
+    ],
+    "rmsd_range": [
+     0.166,
+     0.489
+    ],
+    "frac_at_wall": 0.0227,
+    "lig_cont_min": 312.8,
+    "d_salt_max_nm": 0.396,
+    "na_site_last": 0.0,
+    "i2a": 0,
+    "a2i": 0
+   },
+   {
+    "file": "COLVAR.1",
+    "ns": 71.12,
+    "d_tm36_range": [
+     1.093,
+     1.521
+    ],
+    "rmsd_range": [
+     0.111,
+     0.455
+    ],
+    "frac_at_wall": 0.0119,
+    "lig_cont_min": 316.9,
+    "d_salt_max_nm": 0.406,
+    "na_site_last": 0.0,
+    "i2a": 0,
+    "a2i": 0
+   },
+   {
+    "file": "COLVAR.2",
+    "ns": 71.12,
+    "d_tm36_range": [
+     0.706,
+     1.36
+    ],
+    "rmsd_range": [
+     0.165,
+     0.447
+    ],
+    "frac_at_wall": 0.0,
+    "lig_cont_min": 303.9,
+    "d_salt_max_nm": 0.408,
+    "na_site_last": 0.0,
+    "i2a": 0,
+    "a2i": 0
+   },
+   {
+    "file": "COLVAR.3",
+    "ns": 71.12,
+    "d_tm36_range": [
+     0.936,
+     1.522
+    ],
+    "rmsd_range": [
+     0.215,
+     0.486
+    ],
+    "frac_at_wall": 0.0317,
+    "lig_cont_min": 325.2,
+    "d_salt_max_nm": 0.394,
+    "na_site_last": 0.0,
+    "i2a": 0,
+    "a2i": 0
+   }
+  ],
+  "rct_kJ_at_quarters": [
+   -0.99,
+   -2.34,
+   -1.66,
+   -0.79
+  ],
+  "nker_at_quarters": [
+   1215,
+   1754,
+   2155,
+   2499
+  ],
+  "neff_last": 10799.6,
+  "aggregate_ns": 284.5,
+  "crossings_total_i2a_a2i": [
+   0,
+   0
+  ]
+ },
+ "inactive": {
+  "walkers": [
+   {
+    "file": "COLVAR.0",
+    "ns": 70.84,
+    "d_tm36_range": [
+     0.513,
+     0.833
+    ],
+    "rmsd_range": [
+     0.009,
+     0.271
+    ],
+    "frac_at_wall": 0.0033,
+    "lig_cont_min": 330.3,
+    "d_salt_max_nm": 0.455,
+    "na_site_last": 0.88,
+    "i2a": 0,
+    "a2i": 0
+   },
+   {
+    "file": "COLVAR.1",
+    "ns": 70.84,
+    "d_tm36_range": [
+     0.508,
+     0.889
+    ],
+    "rmsd_range": [
+     0.011,
+     0.255
+    ],
+    "frac_at_wall": 0.086,
+    "lig_cont_min": 332.5,
+    "d_salt_max_nm": 0.424,
+    "na_site_last": 0.92,
+    "i2a": 0,
+    "a2i": 0
+   },
+   {
+    "file": "COLVAR.2",
+    "ns": 70.84,
+    "d_tm36_range": [
+     0.509,
+     1.047
+    ],
+    "rmsd_range": [
+     0.008,
+     0.222
+    ],
+    "frac_at_wall": 0.0145,
+    "lig_cont_min": 349.8,
+    "d_salt_max_nm": 0.495,
+    "na_site_last": 0.86,
+    "i2a": 0,
+    "a2i": 0
+   },
+   {
+    "file": "COLVAR.3",
+    "ns": 70.84,
+    "d_tm36_range": [
+     0.56,
+     1.083
+    ],
+    "rmsd_range": [
+     0.009,
+     0.221
+    ],
+    "frac_at_wall": 0.0,
+    "lig_cont_min": 337.9,
+    "d_salt_max_nm": 0.43,
+    "na_site_last": 0.99,
+    "i2a": 0,
+    "a2i": 0
+   }
+  ],
+  "rct_kJ_at_quarters": [
+   -0.35,
+   1.36,
+   1.73,
+   1.83
+  ],
+  "nker_at_quarters": [
+   656,
+   795,
+   969,
+   1105
+  ],
+  "neff_last": 18169.4,
+  "aggregate_ns": 283.4,
+  "crossings_total_i2a_a2i": [
+   0,
+   0
+  ]
+ }
+}
