@@ -83,6 +83,28 @@ systems by construction.
 | active (10TM, 8F7Q×2, 8Y72) | 12.24–13.18 | 3.63–4.10 |
 | 9PPQ (GPCRdb: active) | 13.00 | 4.06 |
 
-### Equilibrated systems (unbiased ≥100 ns)
+### Equilibrated systems (unbiased 100 ns each, first 10 ns discarded; `results/endpoints.json`)
 
-*To be filled from `COLVAR_measure` of each endpoint's unbiased leg: mean ± SD of both CVs.*
+CV2 is measured against the **equilibrated** inactive reference: the scaffold-aligned mean
+over 50–100 ns of the inactive leg (`cv/rebuild_ref_equilibrated.py`; crystal-derived
+original kept as `cv/ref_inactive_npxxy.crystal.pdb`).
+
+| | CV1 d_tm36 (nm) | CV2 rmsd_npxxy (nm) | R167 CZ–T281 OG1 (nm) | Na⁺ site | DAMGO–D149 (nm) |
+|---|---|---|---|---|---|
+| active leg | 1.199 ± 0.055 | 0.320 ± 0.027 | 1.16 ± 0.17 | 0.00 | 0.321 ± 0.015 |
+| inactive leg | 0.633 ± 0.025 | 0.060 ± 0.029 | 0.52 ± 0.05 | 0.92 ± 0.06 | 0.319 ± 0.017 |
+| separation | 0.565 (10 SD) | 0.260 (9 SD) | | | |
+
+The active state held without its G protein for 100 ns: CV1 drifted −1.3 Å between
+the first and last 10 ns, against a 3 Å failure threshold. The inactive state kept the
+R167–T281 contact and its Na⁺.
+
+**OPES parameters derived from these** (`opes_proposal`):
+- SIGMA 0.025, 0.027 nm: the smaller within-well SD per CV.
+- Lower walls 0.53 nm (CV1) and 0 (CV2, no-op).
+- Upper walls 1.50 nm (CV1) and 0.47 nm (CV2).
+- BARRIER 50 kJ/mol (≈ 12 kcal/mol).
+
+Basin boxes for crossing counts (nm; d_tm36 range, rmsd_npxxy range):
+- inactive: [0.558, 0.684] × [0, 0.118]
+- active: [1.089, 1.364] × [0.265, 0.401]

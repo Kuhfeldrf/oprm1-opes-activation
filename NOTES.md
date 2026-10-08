@@ -276,3 +276,22 @@ legs are watched continuously for any recurrence.
 2026-10-07: the repository owner approved pushing to the **public** GitHub repo
 (`Kuhfeldrf/oprm1-opes-activation`). This supersedes the runbook's §12.5 private-first
 instruction. Pushes follow each stage gate from here on.
+
+## Day 1 → 2 — §6.4 / §8 decision point: PASSED (2026-10-07, 23:30)
+
+1. **Does it match what the runbook assumed?** Yes. Both endpoints are stable for 100 ns
+   unbiased. The active state held without its G protein (CV1 1.20 nm, drift −1.3 Å;
+   threshold 3 Å). The inactive state kept the R3.50–T6.34 contact and its Na⁺. DAMGO
+   stayed salt-bridged to D149 in both. Full table in `cv/cv_definition.md`.
+2. **Is the next step still right?** Yes. The 2D space separates the states by 10 SD (CV1)
+   and 9 SD (CV2), and the deposited active structures cluster (Day 1). No §8 failure
+   signature: no CV1 drift > 3 Å, CV2 settled (trend ≤ 0.02 nm/100 ns), helicity 0.89–0.90.
+3. **What would failure look like?** Endpoint overlap, drift, bilayer collapse, or lipid
+   entering the bundle. None are seen. The bilayer QC over both legs is P–P 43.6 Å, APL
+   settled at ~48 Å² (receptor footprint removed), 0 lipid atoms in the bundle in every
+   frame, and core water ≤ 8.
+
+Note: the active leg's NPxxY (CV2) sits at 0.32 nm against the equilibrated inactive
+reference, below the deposited-structure gap (~0.38 nm). The active TM7 relaxes
+partway without a G protein; TM6 does not. Recorded now because it bears on whether the
+active basin found by OPES will match the deposited active geometry.

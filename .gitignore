@@ -61,3 +61,4 @@ bck.*
 *.xvg
 systems/*/failed_*/
 scratch_*/
+results/remeasure_*/
