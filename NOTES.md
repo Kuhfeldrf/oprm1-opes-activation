@@ -295,3 +295,25 @@ Note: the active leg's NPxxY (CV2) sits at 0.32 nm against the equilibrated inac
 reference, below the deposited-structure gap (~0.38 nm). The active TM7 relaxes
 partway without a G protein; TM6 does not. Recorded now because it bears on whether the
 active basin found by OPES will match the deposited active geometry.
+
+## Day 2 — OPES launch, first parameter revision (2026-10-08 00:05)
+
+**prod1** (4 walkers × 2 starts; SIGMA 0.025/0.027 nm; walls at CV1 0.53–1.50 nm and
+CV2 ≤ 0.47 nm; KAPPA 2000; BARRIER 50 kJ/mol). Checked at 10 ns/walker (40 ns per
+start):
+- The shared bias was building normally. nker reached 1100 (active start) and 486
+  (inactive start).
+- The active start was already exploring toward inactive: one walker reached CV1
+  0.79 nm. There were no committed crossings yet, as expected at this stage.
+- **But the walkers were pushed through the walls.** In the active start, walker 2 spent
+  44% of frames beyond the CV2 upper wall (max 0.58 nm vs wall 0.47), and another
+  walker reached CV1 1.595 nm (wall 1.50). The inactive start went to CV1 0.49 nm
+  (wall 0.53).
+- **Diagnosis:** the walls were too soft relative to BARRIER. At KAPPA 2000 kJ/mol/nm², a
+  wall reaches 50 kJ/mol only after 0.16 nm of penetration, about 6 SIGMA. OPES fills
+  the basin up to BARRIER and then simply climbs the soft wall.
+- **Fix:** KAPPA 50000 (45 kJ/mol at 0.03 nm penetration, about 1 SIGMA). Wall positions are
+  unchanged, since they come from the measured endpoints. Per §9, the parameters were
+  revised instead of spending more wall-clock. prod1 is kept as
+  `runs/prod1_softwalls/` and is **not** used in any result.
+- **prod2** relaunched from scratch with the same walker starting frames.

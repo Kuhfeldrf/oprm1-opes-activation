@@ -19,7 +19,7 @@ subs = {
     "DAM_HEAVY": ",".join(map(str, rep["dam_heavy"])),
     "NA_LIST": ",".join(map(str, rep["na"])),
     "RECEPTOR_HEAVY_GROUP": "rec_heavy",
-    "STRIDE": 2500, "SMOKE_D_AT": 1.00,
+    "STRIDE": 2500, "SMOKE_D_AT": 1.00, "WALL_KAPPA": "50000.0",
 }
 for kv in sys.argv[4:]:
     k, v = kv.split("=", 1)

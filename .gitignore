@@ -62,3 +62,10 @@ bck.*
 systems/*/failed_*/
 scratch_*/
 results/remeasure_*/
+runs/**/*.cpt
+runs/**/KERNELS*
+runs/**/STATE*
+runs/**/*.gro
+runs/**/PLUMED.OUT
+runs/**/bck.*
+runs/**/COLVAR*

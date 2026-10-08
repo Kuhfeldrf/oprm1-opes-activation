@@ -33,8 +33,11 @@ opes: OPES_METAD ...
   @WALKERS@
 ...
 
-# ---- walls: keep the bias out of unphysical territory (positions from measured endpoints)
-uw: UPPER_WALLS ARG=d_tm36,rmsd_npxxy AT=@UW@ KAPPA=2000.0,2000.0 EXP=2,2
-lw: LOWER_WALLS ARG=d_tm36,rmsd_npxxy AT=@LW@ KAPPA=2000.0,2000.0 EXP=2,2
+# ---- walls: keep the bias out of unphysical territory (positions from measured endpoints).
+# KAPPA must be stiff relative to BARRIER: with KAPPA=2000 a wall reaches 50 kJ/mol only
+# after 0.16 nm penetration and OPES pushed walkers through (run prod1, NOTES.md).
+# 50000 kJ/mol/nm^2 gives 45 kJ/mol at 0.03 nm (~1 SIGMA).
+uw: UPPER_WALLS ARG=d_tm36,rmsd_npxxy AT=@UW@ KAPPA=@WALL_KAPPA@,@WALL_KAPPA@ EXP=2,2
+lw: LOWER_WALLS ARG=d_tm36,rmsd_npxxy AT=@LW@ KAPPA=@WALL_KAPPA@,@WALL_KAPPA@ EXP=2,2
 
 PRINT ARG=d_tm36,rmsd_npxxy,d_hbond,chi_w295,d_salt,na_site,lig_cont,opes.bias,opes.rct,opes.zed,opes.neff,opes.nker,opes.work,uw.bias,lw.bias FILE=COLVAR STRIDE=500
