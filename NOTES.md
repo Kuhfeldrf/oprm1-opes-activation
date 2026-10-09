@@ -362,3 +362,34 @@ Three questions:
    - Two FESs that differ by > 2 kcal/mol in the CV2 direction, each with a minimum at
      its own starting NPxxY value.
    - rct still rising in the last quarter.
+
+## Day 2 — prod2 snapshot at ~182 ns/walker (2026-10-08 19:05, 19 h wall-clock)
+
+Snapshot: `results/monitor_prod2_182ns.json`. Current speed is 259 ns/day per walker
+(measured over 2 min). The average since launch is 230 ns/day, because of a slower
+stretch between 15:00 and 19:00 with no error in the logs. 375 ns/walker lands in
+about 18 h more.
+
+- **Still 0 committed crossings in each direction.** Each CV now reaches the other
+  state on its own, but never together:
+  - In the active start, walker 1 brought NPxxY to 0.068 nm (inactive box ≤ 0.118)
+    while TM3–TM6 stayed ≥ 1.07 nm. Walkers 0 and 2 closed TM3–TM6 to 0.52–0.56 nm
+    with NPxxY ≥ 0.16 nm.
+  - In the inactive start, walker 3 reached NPxxY 0.367 nm and CV1 1.083 nm, 0.006 nm
+    short of the active box. These were not simultaneous.
+- **Bias.** nker growth keeps slowing: active +730 and inactive +176 in the last quarter.
+  rct is flat at −0.4…+1.5 kJ/mol, so the deposited bias stays far below
+  BARRIER 50 kJ/mol. OPES is refining the explored region, not pushing outward.
+- **Walls.** Walker 1 of the inactive start is at the lower CV1 wall 8.9% of the time.
+  It prefers TM3–TM6 at about 0.50–0.51 nm, so the FES for CV1 < 0.55 nm is
+  wall-limited and will be masked in the verdict. All other walkers are ≤ 2.9%.
+- **Ligand, salt bridge, Na⁺, fold.** Unchanged and stable.
+
+Three questions:
+1. **Does it match what the runbook assumed?** No, not yet. The two-step pattern
+   persists: TM6 and NPxxY each move separately, and the coupled activation transition
+   has not happened in 730 ns per start.
+2. **Is the next step still right?** Yes, finish the planned 375 ns/walker and then
+   judge. Nothing is breaking (§8), so stopping early would only lose data.
+3. **What would failure look like?** The same picture at the end: off-diagonal
+   sampling only, and FES minima at each start’s own state.
