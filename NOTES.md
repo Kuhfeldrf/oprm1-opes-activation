@@ -393,3 +393,24 @@ Three questions:
    judge. Nothing is breaking (§8), so stopping early would only lose data.
 3. **What would failure look like?** The same picture at the end: off-diagonal
    sampling only, and FES minima at each start’s own state.
+
+## Day 3 — overnight throughput stall (2026-10-09 06:45)
+
+Both OPES jobs (orcaga14, orcaga15) slowed about 20× at the same times:
+- partly from 17:00 on Oct 8;
+- continuously from 21:35 Oct 8 to 05:50 Oct 9 (about 0.4 ns per 45 min instead of 8).
+
+Both recovered between 05:50 and 06:35; the current speed is 230 ns/day per walker.
+The checkpoint timestamps in  show the stall.
+
+There are no errors, LINCS warnings or energy anomalies, and constraint RMSD is
+unchanged. The stall hit two separate nodes simultaneously, so the shared resource is
+the likely cause:  is an NFS mount at 94% full. PLUMED appends COLVAR and
+KERNELS every 500 steps on every walker, which is sensitive to NFS latency.
+
+Effect: lost wall-clock only, not data. Position at 06:45 is 204 ns (active) and 211 ns
+(inactive) per walker, about 17 h from completion if there are no further stalls. The
+job time limit (mdrun -maxh 70) is not at risk.
+
+If it recurs: restart from checkpoint with the run directory on node-local disk,
+copying back at checkpoints.
