@@ -414,3 +414,36 @@ job time limit (mdrun -maxh 70) is not at risk.
 
 If it recurs: restart from checkpoint with the run directory on node-local disk,
 copying back at checkpoints.
+
+## Day 3 — interim FES at ~205 ns/walker (2026-10-09 morning)
+
+Run with `sbatch analysis/fes_job.sh runs/prod2 results/interim_fes_prod2`:
+- grid CV1 0.48–1.56 nm, CV2 0–0.52 nm;
+- the measured basin boxes;
+- reweighting with the total bias.
+
+The pipeline runs end to end. Its first output was all NaN ΔG, which is correct rather
+than a bug: each starts FES has zero sampled grid points in the other starts basin
+box (`basins_sampled`: active start {inactive 0.0, active 1.0}; inactive start the
+reverse). `fes.py` now reports basin coverage explicitly. The two maps share only 12
+grid points (out of about 6000 sampled by either), so the start-difference RMS (0.16
+kcal/mol on those 12 points) means nothing yet.
+
+Shape of the maps (`results/interim_fes_prod2/figures/fes_both_starts.png`):
+- **Active start.**
+  - Global minimum at CV1 1.25, CV2 0.32 nm.
+  - A shoulder at CV1 ≈ 0.93 nm (about 3–4 kcal/mol).
+  - A distinct secondary minimum at **CV1 0.67, CV2 0.42 nm** (about 5–6 kcal/mol):
+    TM6 closed to inactive-like distance, NPxxY *more* displaced than active.
+  - The low-CV2 region (< 0.14 nm) is unsampled at < 12 kcal/mol.
+- **Inactive start.** A single basin at CV1 0.64, CV2 0.05 nm. Inside 12 kcal/mol it
+  reaches only CV1 ≤ 0.96 nm and CV2 ≤ 0.30 nm.
+
+Reading: TM6 closure from the active state is reversible within the CVs. The NPxxY
+return to its inactive conformation is not, and from the inactive side TM6 opening is
+uphill by > 12 kcal/mol in this map. The (CV1 0.67, CV2 0.42) state is a TM6-in /
+TM7-out off-pathway (or intermediate) state, not the inactive basin. So far this
+supports the hypothesis that a degree of freedom missing from the CVs (TM7 / NPxxY
+rotamers / Y7.53 or Na⁺) gates the transition.
+
+Final judgement waits for 375 ns/walker; parameters unchanged.
