@@ -83,6 +83,17 @@ def basin_free_energies(F, grid, basins):
     return {k: (v - ref) * KJ2KCAL for k, v in out.items()}  # kcal/mol relative to inactive
 
 
+def basin_coverage(F, grid, basins):
+    """Fraction of each basin box's grid points with a finite FES value."""
+    gx, gy = grid
+    X, Y = np.meshgrid(gx, gy, indexing="ij")
+    out = {}
+    for name, (x0, x1, y0, y1) in basins.items():
+        m = (X >= x0) & (X <= x1) & (Y >= y0) & (Y <= y1)
+        out[name] = round(float(np.isfinite(F[m]).mean()), 3) if m.any() else 0.0
+    return out
+
+
 def crossings(cv, inactive, active):
     """Committed transitions per walker: a visit to one basin followed by a visit to the
     other, with both CVs inside each basin's box. Returns (n_i2a, n_a2i, event list)."""
@@ -163,6 +174,8 @@ def main():
             "aggregate_ns": float(sum(tmax.values()) / 1000.0),
             "crossings_inactive_to_active": i2a, "crossings_active_to_inactive": a2i,
             "dG_active_minus_inactive_kcal": basin_free_energies(F, grid, basins)["active"],
+            # NaN dG means a basin box has no sampled grid point in this start's FES
+            "basins_sampled": basin_coverage(F, grid, basins),
             "dG_by_quarter_kcal": [q["active"] for q in quarters],
             "dG_cumulative_kcal": [q["active"] for q in cum],
             "rct_last_kJ": float(cv["opes.rct"][-1]) if "opes.rct" in cv else None,
@@ -178,7 +191,12 @@ def main():
     rel = both & (fes["active"] * KJ2KCAL < 8) & (fes["inactive"] * KJ2KCAL < 8)
     D_aligned = D - np.nanmean(D[rel]) if rel.any() else D
     np.savetxt(a.out / "fes" / "difference_active_minus_inactive.dat", D_aligned)
+    shared = both  # every grid point either start sampled, regardless of depth
+    D_shared = D - np.nanmean(D[shared]) if shared.any() else D
     summary["start_independence"] = {
+        "grid_points_sampled_by_both": int(shared.sum()),
+        "rms_diff_where_both_sampled_kcal":
+            float(np.sqrt(np.nanmean(D_shared[shared] ** 2))) if shared.any() else None,
         "grid_points_compared": int(rel.sum()),
         "max_abs_diff_kcal": float(np.nanmax(np.abs(D_aligned[rel]))) if rel.any() else None,
         "rms_diff_kcal": float(np.sqrt(np.nanmean(D_aligned[rel] ** 2))) if rel.any() else None,
