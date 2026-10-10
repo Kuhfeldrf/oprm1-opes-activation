@@ -1,0 +1,28 @@
+{
+ "active": {
+  "points_compared": 3746,
+  "rms_diff_kcal": 0.004,
+  "max_abs_diff_kcal": 0.023,
+  "min_plumed": [
+   1.247,
+   0.322
+  ],
+  "min_fes_py": [
+   1.247,
+   0.322
+  ]
+ },
+ "inactive": {
+  "points_compared": 1441,
+  "rms_diff_kcal": 0.007,
+  "max_abs_diff_kcal": 0.025,
+  "min_plumed": [
+   0.642,
+   0.052
+  ],
+  "min_fes_py": [
+   0.642,
+   0.052
+  ]
+ }
+}

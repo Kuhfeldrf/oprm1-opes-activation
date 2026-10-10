@@ -447,3 +447,60 @@ supports the hypothesis that a degree of freedom missing from the CVs (TM7 / NPx
 rotamers / Y7.53 or Na⁺) gates the transition.
 
 Final judgement waits for 375 ns/walker; parameters unchanged.
+
+## Day 4 — §10 verdict (2026-10-10)
+
+prod2 finished: 2 starts × 4 walkers × 375 ns = 3.0 μs biased, both jobs exiting 0. The
+analysis is `sbatch analysis/final_analysis_job.sh runs/prod2 results/fes_prod2`
+(FES on all data and on the second half, convergence, PLUMED cross-check, bilayer QC).
+
+| §10 criterion | Measured | Verdict |
+|---|---|---|
+| 1 reversible crossing | 0 / 0 committed crossings in each start | FAIL |
+| 2 start-independence | each start sampled 0% of the other basin; in the second half, the shared region below 8 kcal/mol (338 points) differs by 2.2 kcal/mol RMS, 5.9 max | FAIL |
+| 3 no hysteresis | forward and reverse paths visit different regions (`figures/paths_overlay.png`) | FAIL |
+| 4 convergence | walker SD active 2.2 → 2.2, inactive 0.75 → 1.9 kcal/mol (grows); Q3 vs Q4 RMS 2.1 / 0.9 kcal/mol | FAIL |
+
+**Supporting checks:**
+- DAMGO stayed bound (coordination ≥ 283; D149 salt bridge ≤ 0.50 nm).
+- Walls were touched in ≤ 2.4% of frames, except inactive walker 1 at 7.2% (lower CV1
+  wall; FES below about 0.55 nm masked).
+- The PLUMED `REWEIGHT_BIAS` cross-check matches `fes.py` to 0.004–0.007 kcal/mol RMS,
+  with identical minima.
+
+**Plausibility checks on the analysis itself:**
+- **The first membrane QC on the biased walkers flagged three walkers.** It showed
+  "lipids in the bundle", tilt up to 90° and helicity down to 0.79. All of it was a **PBC
+  artefact**: single-rank GROMACS wraps atoms into the box at neighbour-search steps, so
+  the receptor is split once it diffuses across a box edge. An axis-free test also
+  counted lipids at the "centre" from 250 ns on in inactive walker 3, again because of
+  the split receptor. `membrane_qc.py` now makes the solute whole, centres it and wraps
+  the rest by residue. After that fix, all 8 walkers show helicity ≥ 0.84, tilt ≤ 26°,
+  and a single lipid atom in 1 of 608 frames. The CVs were never affected, because
+  `WHOLEMOLECULES` is in `plumed_opes.dat`.
+- **PLUMED 2.10 template differences from runbook §7.6:**
+  - `READ VALUES=opes.bias` creates component `<label>.bias`;
+  - `HISTOGRAM` with `LOGWEIGHTS` needs `NORMALIZATION=true`.
+  Both are fixed in `cv/plumed/plumed_reweight.dat`.
+
+Three questions:
+1. **Does it match what the runbook assumed?** No. The runbook assumed the two
+   coordinates capture activation. Instead:
+   - TM6 (CV1) moves freely in both directions;
+   - NPxxY (CV2) moves separately, sometimes against CV1;
+   - the coupled transition never happened in 3 μs.
+   Na⁺ at D2.50 never left in the inactive start and never bound in the active start.
+   That is an unbiased slow variable differing between the starts, named as a suspect
+   on Day 1.
+2. **Is the next step still right?** Per §10, this is a clean negative and is reported as
+   the finding, not tuned away. Option B was conditional on Option A converging early,
+   so it is not started. The next experiments, out of this week's scope, are:
+   - a third CV for Na⁺ occupancy and/or Y7.53 χ1;
+   - raising BARRIER to 80–100 kJ/mol;
+   - training a learned CV on these 3 μs.
+3. **What would a false negative look like?** A force-field or setup error that freezes
+   TM7 or sodium. Two checks argue against it:
+   - the unbiased endpoints are stable and match deposited geometry;
+   - both CVs individually traverse their full range.
+   The remaining risk is the fixed protonation of D2.50, which propka predicts would
+   change on activation. This is recorded as a model limitation.

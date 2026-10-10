@@ -54,6 +54,15 @@ def main():
     ap.add_argument("--no-dssp", action="store_true")
     a = ap.parse_args()
     u = mda.Universe(a.tpr, a.traj)
+    # GROMACS (single rank) wraps atoms into the box at neighbour-search steps, so once
+    # the receptor diffuses across a box edge it is split in the trajectory. A split
+    # receptor puts the bundle centre/axis inside the lipids and corrupts DSSP. Make the
+    # receptor+ligand whole, centre it, and wrap everything else by residue.
+    from MDAnalysis import transformations as trans
+    solute = u.select_atoms("not resname PA PC OL CHL WAT Na+ Cl-")
+    rest = u.atoms - solute
+    u.trajectory.add_transformations(trans.unwrap(solute), trans.center_in_box(solute),
+                                     trans.wrap(rest, compound="residues"))
     P = u.select_atoms("resname PC and name P31")
     lip_heavy = u.select_atoms("resname PA PC OL CHL and not element H")
     rec_heavy = u.select_atoms("not resname PA PC OL CHL WAT Na+ Cl- DAM and not element H")

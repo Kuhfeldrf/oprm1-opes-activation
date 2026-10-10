@@ -53,6 +53,8 @@ def total_bias(cv):
 def fes2d(x, y, bias, grid, bw):
     """Weighted Gaussian KDE on a grid. Returns F (kJ/mol, min 0) with NaN where unsampled."""
     gx, gy = grid
+    if len(x) == 0:
+        return np.full((len(gx), len(gy)), np.nan)
     logw = bias / KT
     logw -= logw.max()
     w = np.exp(logw)
@@ -159,10 +161,15 @@ def main():
         # time quarters (per walker), for the convergence check
         quarters = []
         tmax = {k: cv["time"][cv["walker"] == k].max() for k in np.unique(cv["walker"])}
-        frac = np.array([cv["time"][i] / tmax[cv["walker"][i]] for i in range(len(cv["time"]))])
+        tmin = {k: cv["time"][cv["walker"] == k].min() for k in np.unique(cv["walker"])}
+        # quarters of the analysed window (after any burn-in), per walker
+        frac = np.array([(cv["time"][i] - tmin[cv["walker"][i]])
+                         / (tmax[cv["walker"][i]] - tmin[cv["walker"][i]])
+                         for i in range(len(cv["time"]))])
         cum = []
         for q in range(4):
-            m = (frac > q / 4) & (frac <= (q + 1) / 4)
+            m = (frac >= q / 4) & (frac <= (q + 1) / 4) if q == 0 else \
+                (frac > q / 4) & (frac <= (q + 1) / 4)
             Fq = fes2d(cv["d_tm36"][m], cv["rmsd_npxxy"][m], b[m], grid, bw)
             np.savetxt(a.out / "fes" / f"quarters_{start}_{q+1}.dat", Fq * KJ2KCAL)
             quarters.append(basin_free_energies(Fq, grid, basins))
@@ -171,7 +178,7 @@ def main():
             cum.append(basin_free_energies(Fc, grid, basins))
         summary[start] = {
             "frames": int(len(cv["time"])), "walkers": int(len(np.unique(cv["walker"]))),
-            "aggregate_ns": float(sum(tmax.values()) / 1000.0),
+            "aggregate_ns": float(sum(tmax[k] - tmin[k] for k in tmax) / 1000.0),
             "crossings_inactive_to_active": i2a, "crossings_active_to_inactive": a2i,
             "dG_active_minus_inactive_kcal": basin_free_energies(F, grid, basins)["active"],
             # NaN dG means a basin box has no sampled grid point in this start's FES

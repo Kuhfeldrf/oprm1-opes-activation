@@ -1,0 +1,17 @@
+# plumed_reweight.dat — OPES reweighting to the 2D FES (runbook §7.6), via plumed driver
+#   plumed driver --noatoms --plumed plumed_reweight.dat --kt 2.577483   (kT at 310 K, kJ/mol)
+# NOTE vs runbook template: the reweighting bias is the TOTAL bias (OPES + both walls),
+# not opes.bias alone. Inside the walls the wall terms are ~0, but samples that touch a
+# wall carry that bias too and must be reweighted by it.
+d_tm36:     READ FILE=/scratch/kuhfeldr-Kuhfeld_temp/oprm1-opes-activation/results/fes_prod2/plumed_reweight/COLVAR_all_active VALUES=d_tm36     IGNORE_TIME IGNORE_FORCES
+rmsd_npxxy: READ FILE=/scratch/kuhfeldr-Kuhfeld_temp/oprm1-opes-activation/results/fes_prod2/plumed_reweight/COLVAR_all_active VALUES=rmsd_npxxy IGNORE_TIME IGNORE_FORCES
+b_opes:     READ FILE=/scratch/kuhfeldr-Kuhfeld_temp/oprm1-opes-activation/results/fes_prod2/plumed_reweight/COLVAR_all_active VALUES=opes.bias  IGNORE_TIME IGNORE_FORCES
+b_uw:       READ FILE=/scratch/kuhfeldr-Kuhfeld_temp/oprm1-opes-activation/results/fes_prod2/plumed_reweight/COLVAR_all_active VALUES=uw.bias    IGNORE_TIME IGNORE_FORCES
+b_lw:       READ FILE=/scratch/kuhfeldr-Kuhfeld_temp/oprm1-opes-activation/results/fes_prod2/plumed_reweight/COLVAR_all_active VALUES=lw.bias    IGNORE_TIME IGNORE_FORCES
+bias:       COMBINE ARG=b_opes.bias,b_uw.bias,b_lw.bias PERIODIC=NO   # READ names components <label>.<column>
+
+w: REWEIGHT_BIAS ARG=bias TEMP=310
+
+hh: HISTOGRAM ARG=d_tm36,rmsd_npxxy GRID_MIN=0.48,0.0 GRID_MAX=1.56,0.52 GRID_BIN=100,100 BANDWIDTH=0.02,0.01 LOGWEIGHTS=w NORMALIZATION=true
+ff: CONVERT_TO_FES GRID=hh TEMP=310
+DUMPGRID GRID=ff FILE=/scratch/kuhfeldr-Kuhfeld_temp/oprm1-opes-activation/results/fes_prod2/plumed_reweight/fes_plumed_active.dat
