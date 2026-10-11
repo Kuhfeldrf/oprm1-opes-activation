@@ -69,3 +69,7 @@ runs/**/*.gro
 runs/**/PLUMED.OUT
 runs/**/bck.*
 runs/**/COLVAR*
+
+# MDAnalysis trajectory offset caches
+.*_offsets.npz
+.*_offsets.lock
