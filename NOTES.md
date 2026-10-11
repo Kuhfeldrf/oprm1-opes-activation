@@ -504,3 +504,81 @@ Three questions:
    - both CVs individually traverse their full range.
    The remaining risk is the fixed protonation of D2.50, which propka predicts would
    change on activation. This is recorded as a model limitation.
+
+## Day 5 — re-examining the diagnosis; follow-up runs (2026-10-11)
+
+**Prompt.** I was asked to reconsider the Day 4 interpretation rather than build on it.
+I had prepared an Na⁺-biased third-CV rerun. It was **not** launched.
+
+**Hysteresis diagnostic.** I compared frames from the two starts at matched CV values,
+using `results/fes_prod2/colvar_strided`:
+
+| At CV1 0.55–0.72, CV2 0.18–0.32 nm | active start (w0, w2) | inactive start (all walkers) |
+|---|---|---|
+| Na⁺ at D2.50 | 0.00 | 0.91 ± 0.06 |
+| R167 CZ – T281 OG1 | 0.78 ± 0.10 nm | 0.47 ± 0.08 nm |
+| W295 χ1 | −1.24 | −1.26 |
+| lig_cont / d_salt | 388 / 0.33 nm | 412 / 0.33 nm |
+
+At CV1 0.72–0.95 nm, CV2 0.10–0.22 nm the picture is the same: Na⁺ 0.00 vs 0.89 and
+side-chain contact 0.95 vs 0.59 nm.
+
+**Active-start walkers that closed TM6 were still relaxing at the end.**
+Means over 0–50 / 100–200 / 250–375 ns:
+
+| Walker | CV2 (nm) | side-chain contact (nm) |
+|---|---|---|
+| w0 | 0.40 / 0.36 / 0.31 | 0.92 / 0.77 / 0.66 |
+| w2 | 0.31 / 0.28 / 0.24 | 1.05 / 0.92 / 0.84 |
+
+**Revised reading:**
+1. **The hysteresis is real and involves at least two variables outside the CVs:** Na⁺
+   occupancy and the R3.50–T6.34 side-chain contact. Na⁺ was over-weighted on Day 4.
+2. **Insufficient time is not excluded.** The active-start deactivation was incomplete
+   but still moving toward inactive in every variable.
+3. **Na⁺ is not needed for that direction.** The active start relaxed toward inactive
+   without it.
+4. **No transducer is present.** A G-protein-free active state decaying (TM6 first,
+   NPxxY lagging) may be correct physics. The Option A expectation may not hold without
+   a transducer.
+
+The §10 FAIL stands. The README diagnosis is corrected in place, with a dated
+correction section. Tag v0.1-poc is left as it is so the history stays honest.
+
+**Why not the Na⁺-biased run:**
+- It addresses one of two hidden variables.
+- It does not test the time explanation.
+- It risks dragging an ion into the collapsed active pocket past DAMGO.
+
+**Follow-ups launched instead.** They cost the same (two 4-GPU nodes for about
+1.5 days) and give two interpretable answers:
+1. **`opes_active_ext`** (job 204211). The prod2 active start continues from its
+   checkpoints and STATE for +375 ns/walker. `opes.tpr` was extended with
+   `gmx_mpi convert-tpr -extend 375000`, and the bias is identical. The rendered
+   restart input was diffed against the original: it differs only in the RESTART and
+   STATE_RFILE lines. COLVAR/KERNELS/STATE/cpt/tpr at 375 ns are backed up in
+   `runs/prod2_backup_375ns/`. The v0.1 analysis is unchanged, since it is time ≤ 375 ns.
+2. **`inactive_nona`** (job 204212, equilibration + 100 ns unbiased).
+   - Built by `systems/make_nona.py` from the end of the inactive unbiased leg: the
+     D2.50 Na⁺ (atom 36847, 0.34 nm from D116 CG) is swapped with a bulk water (atoms
+     39580–39583). The ion ends up 4.55 nm from the bilayer midplane, ≥ 1.84 nm from any
+     non-solvent atom.
+   - Topology, index, composition and PLUMED indices are unchanged.
+   - `plumed driver` on the swapped frame gives identical CVs and observables, except
+     na_site 0.88 → 0.00.
+   - Same equilibration protocol, seed 20261131.
+   - The unbiased leg also shows whether Na⁺ re-enters spontaneously. If it does, the
+     sodium-free condition is not stable and that is itself the answer.
+   - OPES on it follows with the prod2 parameters unchanged.
+
+Three questions:
+1. **Does it match what was assumed?** The Day 4 diagnosis assumed a single hidden
+   variable. The data show two, plus an incomplete relaxation.
+2. **Is the next step still right?** The two runs separate time from sodium. Neither
+   needs new CV definitions, so the comparison with prod2 is direct.
+3. **What would failure look like?**
+   - Extension: the active-start walkers stay where they ended. That points to a
+     coordinate problem, not time.
+   - inactive_nona: the start-dependence persists with sodium removed, which rules
+     sodium out.
+   - inactive_nona unbiased leg: Na⁺ returns to the site.

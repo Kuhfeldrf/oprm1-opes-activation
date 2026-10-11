@@ -12,7 +12,8 @@
 # (WALKERS_MPI), one GPU each, via gmx_mpi -multidir. Runbook §7.5, §9.
 #
 # Usage: sbatch -J opes_<start> systems/opes.sh <start> <run_tag> <ns_per_walker> \
-#               SIGMA=0.0x,0.0y UW=a,b LW=c,d [BARRIER=50]
+#               SIGMA=0.0x,0.0y UW=a,b LW=c,d [BARRIER=50] [TEMPLATE=plumed_opes.dat]
+#               [SEED_BASE=20261100] [any other KEY=VALUE is passed to render_plumed.py]
 #   walker k starts from the unbiased production of <start> at time t_k (evenly spaced
 #   over the second half), with fresh velocities (seed differs per walker).
 # Restart: resubmit the same command; walkers continue from their checkpoints and the
@@ -25,7 +26,7 @@ NW=${SLURM_NTASKS:-4}
 SYS=$ROOT/systems/$START
 RUN=$ROOT/runs/$TAG/$START
 mkdir -p "$RUN"; cd "$RUN"
-declare -A KV=( [BARRIER]=50 )
+declare -A KV=( [BARRIER]=50 [TEMPLATE]=plumed_opes.dat [SEED_BASE]=20261100 )
 for kv in "$@"; do KV[${kv%%=*}]=${kv#*=}; done
 for k in SIGMA UW LW; do [ -n "${KV[$k]}" ] || { echo "FATAL: $k= required"; exit 1; }; done
 
@@ -38,7 +39,7 @@ for ((k=0; k<NW; k++)); do
     # starting frame: second half of the unbiased leg, evenly spaced (ps)
     T0=$(python3 -c "print(int(50000 + 50000*($k+1)/$NW))")
     echo 0 | gmx_mpi trjconv -f $SYS/prod.xtc -s $SYS/prod.tpr -dump $T0 -o $W/start.gro -quiet
-    sed -e "s/^gen-vel .*/gen-vel                 = yes\ngen-temp                = 310\ngen-seed                = $((20261100 + k))/" \
+    sed -e "s/^gen-vel .*/gen-vel                 = yes\ngen-temp                = 310\ngen-seed                = $((${KV[SEED_BASE]} + k))/" \
         -e "s/^continuation .*/continuation            = no/" \
         -e "s/@NSTEPS@/$(( NS * 250000 ))/" \
         <(cat $ROOT/systems/mdp/_common.mdp $ROOT/systems/mdp/prod.mdp) > $W/opes.mdp
@@ -51,9 +52,13 @@ for ((k=0; k<NW; k++)); do
   # COLVAR is written as COLVAR.<k> (PLUMED appends the replica index in multi-sim mode).
   RLINE=""; RFILE=""
   if [ -f w0/STATE ]; then RLINE="RESTART"; RFILE="STATE_RFILE=$RUN/w0/STATE"; fi
-  $PY $ROOT/systems/render_plumed.py $SYS $ROOT/cv/plumed/plumed_opes.dat $W/plumed.dat \
+  EXTRA=()
+  for key in "${!KV[@]}"; do
+    case $key in TEMPLATE|SEED_BASE) ;; *) EXTRA+=("$key=${KV[$key]}") ;; esac
+  done
+  $PY $ROOT/systems/render_plumed.py $SYS $ROOT/cv/plumed/${KV[TEMPLATE]} $W/plumed.dat \
       INDEX=$SYS/index.ndx RESTART_LINE="$RLINE" STATE_RFILE="$RFILE" WALKERS=WALKERS_MPI \
-      SIGMA=${KV[SIGMA]} UW=${KV[UW]} LW=${KV[LW]} BARRIER=${KV[BARRIER]}
+      "${EXTRA[@]}"
 done
 cp $ROOT/cv/ref_inactive_npxxy.pdb ref_used.pdb   # provenance of the CV2 reference
 CPI=""; [ -f w0/opes.cpt ] && CPI="-cpi opes.cpt"

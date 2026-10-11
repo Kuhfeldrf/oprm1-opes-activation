@@ -17,8 +17,13 @@ proof of concept for a methods proposal, not a biology result.
 - no reversible activation transition;
 - two start-dependent landscapes.
 
-The two coordinates are not sufficient for μOR activation at this sampling budget.
-Details and the diagnosis are [below](#verdict).
+**Why it failed is not yet resolved** (see the [correction](#correction-2026-10-11-diagnosis-not-established)).
+The data show a slow variable outside the two CVs, but cannot yet separate:
+- missing coordinates;
+- too little sampling time;
+- the sodium-ion difference between the two starts.
+
+Details are [below](#verdict).
 
 Quickest way to check that the setup works: [`examples/two-cv-smoke/`](examples/two-cv-smoke/)
 (about 5 s on 4 CPU cores, no GPU and no allocation needed).
@@ -135,7 +140,8 @@ Supporting checks, all of which pass:
 - **The two CVs never changed together in one trajectory.** The closest the active start
   came to the inactive box was (0.636, 0.130) nm, 1.2 kernel widths outside it.
 - **The active start's FES has a secondary basin at CV1 0.6–0.7 nm, CV2 0.3–0.4 nm**
-  (TM6 closed, NPxxY displaced). The inactive start never visits it.
+  (TM6 closed, NPxxY displaced). In the inactive-start map that region lies about
+  8 kcal/mol or more above the minimum.
 - **Na⁺ at D2.50 was a slow, unbiased difference between the starts.** It stayed bound
   in every inactive-start walker (≤ 0.1% of frames unbound) and never bound in the
   active start.
@@ -144,16 +150,47 @@ Supporting checks, all of which pass:
 
 **Diagnosis**, using the runbook §10 table rows "no crossings", "landscapes disagree"
 and "CV1 reached but CV2 flat":
-- Rate-limiting degrees of freedom lie outside the 2D space. The prime suspects are:
-  - Na⁺ occupancy (and the D2.50 protonation that a fixed-charge model cannot change);
-  - the TM7 / Y7.53 side-chain rearrangement that NPxxY backbone RMSD does not resolve.
-- This is the outcome the runbook calls a passing week as a *clean negative*: two
-  hand-picked coordinates are not enough, which is the argument for learning the
-  coordinate.
-- The 3 μs here is a ready-made training set for that. It holds 8 biased walkers with
-  all secondary observables recorded.
-- A cheaper next step: repeat with Na⁺ occupancy as a third biased CV, or with BARRIER
-  raised to 80–100 kJ/mol.
+- **There is a slow variable outside the 2D space.** At the same CV values (CV1
+  0.55–0.72 nm, CV2 0.18–0.32 nm), frames from the two starts still differ in two
+  recorded observables:
+  - Na⁺ at D2.50: 0.00 in the active start vs 0.91 in the inactive start;
+  - the R167–T281 side-chain contact: 0.78 nm (broken) vs 0.47 nm (formed).
+
+  W295 χ1 and the ligand observables do not differ.
+- **Which variable is rate-limiting is not established.** See the correction below.
+
+### Correction (2026-10-11): diagnosis not established
+
+The first version of this section said the two coordinates are insufficient and named
+Na⁺ as the prime suspect. On re-analysis that goes beyond the data:
+- **The active-start relaxation had not finished.** The two walkers that closed TM6
+  were still drifting toward the inactive state when the run stopped. Their means over
+  0–50, 100–200 and 250–375 ns were:
+  - walker 0: CV2 0.40 → 0.36 → 0.31 nm; side-chain contact 0.92 → 0.77 → 0.66 nm;
+  - walker 2: CV2 0.31 → 0.28 → 0.24 nm; side-chain contact 1.05 → 0.92 → 0.84 nm.
+
+  So too little sampling time explains the active-start side as well as a missing
+  coordinate does.
+- **Na⁺ is not shown to be causal.** The active start was relaxing toward inactive
+  without any Na⁺ at the site. Na⁺ may matter mainly in the activating direction, where
+  the inactive start kept its ion throughout.
+- **No transducer.** Neither system has a G protein or nanobody. A G-protein-free,
+  agonist-bound receptor is not generally expected to hold a fully active conformation
+  stably. The active-start walkers decaying toward inactive (TM6 first, NPxxY lagging)
+  may therefore be correct physics, and a start-independent landscape for this system
+  may have the inactive state lowest. The runbook's Option A expectation that "agonist
+  favours active" may not hold without a transducer.
+
+The §10 verdict (FAIL) is unchanged; only the explanation is withdrawn. Follow-up runs
+designed to separate these explanations (NOTES.md, Day 5):
+1. **The active start, extended** from its checkpoints by 375 ns per walker with the
+   same bias. Does deactivation complete in both CVs?
+2. **A sodium-free inactive start** (`systems/inactive_nona`): the D2.50 Na⁺ swapped
+   with a bulk water, so both starts are chemically identical. Is the start-dependence
+   caused by Na⁺?
+
+Either way, the 3 μs here is a ready-made training set for a learned CV. It holds
+8 biased walkers with all secondary observables recorded.
 
 **External validation is out of scope.** Everything above is an internal check, and
 internal convergence detects variance, not force-field bias. Agreement with measured

@@ -16,7 +16,7 @@ source $ROOT/env/plumed_env.sh
 D=$ROOT/systems/$START; M=$ROOT/systems/mdp
 cd "$D"
 NT=${SLURM_CPUS_PER_TASK:-16}
-SEED=$(( 20261007 + $(printf '%d' "'${START:0:1}") ))
+SEED=${SEED:-$(( 20261007 + $(printf '%d' "'${START:0:1}") ))}   # override for derived systems sharing a first letter
 mk() { cat $M/_common.mdp "$M/$1.mdp" | sed -e "s/@SEED@/$SEED/" -e "s/@DT@/$2/" \
          -e "s/@NSTEPS@/$3/" -e "s/@FC@/$4/" > "$5"; }
 # grompp that tolerates ONLY the known HMR/4 fs warning on Lipid21 C=C bonds (period
