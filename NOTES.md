@@ -582,3 +582,32 @@ Three questions:
    - inactive_nona: the start-dependence persists with sodium removed, which rules
      sodium out.
    - inactive_nona unbiased leg: Na⁺ returns to the site.
+
+### Day 5 (2026-10-11, late): inactive_nona unbiased leg done, OPES launched
+
+- **Unbiased leg (job 204212, 100 ns): Na⁺ did not return.** na_site > 0.1 in 0 of
+  10,001 frames.
+- **The receptor stayed inactive without sodium.** Second-half means:
+
+  | | CV1 d_tm36 (nm) | CV2 rmsd_npxxy (nm) | d_hbond (nm) | na_site |
+  |---|---|---|---|---|
+  | inactive_nona | 0.638 | 0.065 | 0.519 | 0.00 |
+  | inactive (with Na⁺) | 0.633 | 0.125 | 0.515 | 0.89 |
+
+  - 96% of second-half frames lie in the inactive box. Maxima over the run: CV1 0.776,
+    CV2 0.145.
+  - Removing Na⁺ did not destabilise the inactive state on 100 ns. CV2 sits closer to
+    the reference without it.
+- **OPES on inactive_nona (job 209397, orcaga13).**
+  - Command: `systems/opes.sh inactive_nona prod2 375 SIGMA=0.025,0.027 UW=1.50,0.47
+    LW=0.53,0.0 BARRIER=50`. The parameters are prod2's, unchanged.
+  - Output goes to `runs/prod2/inactive_nona`.
+  - Walkers start from t = 62.5, 75, 87.5 and 100 ns of the unbiased leg, with seeds
+    20261100+k (the same seeds as prod2).
+  - Startup check: nker is identical across walkers (shared bias), and the walls are
+    rendered as in prod2.
+- **Active extension (job 204211) at about 422 ns per walker**, averaged over the 47 ns
+  since the restart:
+  - w0 and w2 are still partly deactivated. w2's CV2 continues to fall (0.24 → 0.20).
+  - w1 and w3 stay active-like.
+  - No committed crossings yet.
