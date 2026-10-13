@@ -1,0 +1,122 @@
+{
+ "active": {
+  "walker_error": {
+   "first_half": {
+    "walker_sd_kcal": 2.2082340052539955,
+    "grid_points": 2416
+   },
+   "second_half": {
+    "walker_sd_kcal": 2.175791399342453,
+    "grid_points": 2058
+   }
+  },
+  "block_q3_vs_q4_rms_kcal": 2.0952882920420075,
+  "block_q3_vs_q4_points": 1215,
+  "crossings_i2a_a2i": [
+   0,
+   0
+  ],
+  "closest_approach_to_other_basin": {
+   "walker": 2,
+   "time_ns": 369.23,
+   "d_tm36": 0.636,
+   "rmsd_npxxy": 0.13,
+   "distance_in_bandwidths": 1.23
+  },
+  "frac_frames_with_CV1_in_other_box_range": 0.237,
+  "frac_frames_with_CV2_in_other_box_range": 0.0587,
+  "secondary_observables": {
+   "d_hbond": {
+    "corr_with_CV1": 0.843,
+    "corr_with_CV2": -0.33,
+    "min": 0.455,
+    "max": 1.835
+   },
+   "na_site": {
+    "corr_with_CV1": NaN,
+    "corr_with_CV2": NaN,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "chi_w295": {
+    "corr_with_CV1": 0.141,
+    "corr_with_CV2": 0.138,
+    "min": -1.991,
+    "max": -0.424
+   },
+   "lig_cont": {
+    "corr_with_CV1": 0.026,
+    "corr_with_CV2": -0.061,
+    "min": 303.867,
+    "max": 487.335
+   },
+   "d_salt": {
+    "corr_with_CV1": -0.008,
+    "corr_with_CV2": 0.017,
+    "min": 0.276,
+    "max": 0.502
+   }
+  },
+  "rct_last_kJ": -0.86
+ },
+ "inactive": {
+  "walker_error": {
+   "first_half": {
+    "walker_sd_kcal": 2.1265368891210437,
+    "grid_points": 1518
+   },
+   "second_half": {
+    "walker_sd_kcal": 2.8222708174251894,
+    "grid_points": 1057
+   }
+  },
+  "block_q3_vs_q4_rms_kcal": 0.7127112892868032,
+  "block_q3_vs_q4_points": 962,
+  "crossings_i2a_a2i": [
+   0,
+   0
+  ],
+  "closest_approach_to_other_basin": {
+   "walker": 2,
+   "time_ns": 327.6,
+   "d_tm36": 1.009,
+   "rmsd_npxxy": 0.241,
+   "distance_in_bandwidths": 4.68
+  },
+  "frac_frames_with_CV1_in_other_box_range": 0.0031,
+  "frac_frames_with_CV2_in_other_box_range": 0.1708,
+  "secondary_observables": {
+   "d_hbond": {
+    "corr_with_CV1": 0.847,
+    "corr_with_CV2": -0.608,
+    "min": 0.302,
+    "max": 1.119
+   },
+   "na_site": {
+    "corr_with_CV1": NaN,
+    "corr_with_CV2": NaN,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "chi_w295": {
+    "corr_with_CV1": 0.02,
+    "corr_with_CV2": 0.073,
+    "min": -1.841,
+    "max": -0.655
+   },
+   "lig_cont": {
+    "corr_with_CV1": 0.03,
+    "corr_with_CV2": 0.356,
+    "min": 305.094,
+    "max": 507.839
+   },
+   "d_salt": {
+    "corr_with_CV1": -0.1,
+    "corr_with_CV2": 0.125,
+    "min": 0.276,
+    "max": 0.517
+   }
+  },
+  "rct_last_kJ": 0.04
+ }
+}

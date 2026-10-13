@@ -17,13 +17,21 @@ proof of concept for a methods proposal, not a biology result.
 - no reversible activation transition;
 - two start-dependent landscapes.
 
-**Why it failed is not yet resolved** (see the [correction](#correction-2026-10-11-diagnosis-not-established)).
-The data show a slow variable outside the two CVs, but cannot yet separate:
-- missing coordinates;
-- too little sampling time;
-- the sodium-ion difference between the two starts.
+**Why it failed (v0.2 follow-ups, [below](#follow-ups-v02-2026-10-13)).** Two
+controlled follow-ups narrowed the explanation:
+- **Not sampling time.** Doubling the active start to 750 ns per walker gave still no
+  crossing, and convergence got worse.
+- **Not the sodium ion.** A sodium-free inactive start was no closer to the active
+  start's landscape.
 
-Details are [below](#verdict).
+What remains:
+- **A missing coordinate.** TM6 and the NPxxY motif move independently in every run,
+  and the bias on two separate CVs never makes them move together.
+- **No transducer.** The receptor has no G protein or nanobody, so a stable active
+  basin may not exist in this system.
+
+These two are not yet distinguished. Details of the original verdict are
+[below](#verdict).
 
 Quickest way to check that the setup works: [`examples/two-cv-smoke/`](examples/two-cv-smoke/)
 (about 5 s on 4 CPU cores, no GPU and no allocation needed).
@@ -189,8 +197,70 @@ designed to separate these explanations (NOTES.md, Day 5):
    with a bulk water, so both starts are chemically identical. Is the start-dependence
    caused by Na⁺?
 
-Either way, the 3 μs here is a ready-made training set for a learned CV. It holds
-8 biased walkers with all secondary observables recorded.
+### Follow-ups (v0.2, 2026-10-13)
+
+Both follow-ups used the prod2 parameters unchanged and went through the same analysis
+(`analysis/final_analysis_job.sh`). The PLUMED reweight cross-check agrees to
+≤ 0.007 kcal/mol in both, and the membrane QC raised no flags on any walker.
+
+**1. Active start extended to 750 ns per walker** (`results/fes_v02_ext/`, 3.0 μs from
+the active start).
+- **Still 0 / 0 committed crossings.** The closest approach to the inactive box
+  (1.23 kernel widths) happened at 369 ns, before the extension. During the extension,
+  no walker got closer than 1.4 kernel widths.
+- **The Day-5 relaxation did not continue.**
+  - Walkers 0 and 2 drifted back from CV1 ≈ 0.6 nm to 0.8–1.0 nm.
+  - Walker 3 moved its NPxxY to inactive values (0.05–0.12 nm) at about 450 ns,
+    but kept TM6 open (CV1 1.1–1.4 nm).
+- **The sampled region is L-shaped.** Walkers reach the inactive value of one CV or the
+  other, never both:
+  - (CV1 ≈ 0.6, CV2 ≈ 0.3): TM6 closed, NPxxY active-like;
+  - (CV1 ≈ 1.2, CV2 ≈ 0.1): TM6 open, NPxxY inactive-like.
+- **Convergence got worse.** Walker-to-walker SD rose from 1.9 to 2.7 kcal/mol (first
+  vs second half).
+- **The two starts still disagree.** The second-half difference against the inactive
+  start, over their shared low-FE region, is 1.7 kcal/mol RMS (4.5 max). Their basins
+  are still disjoint.
+
+**2. Sodium-free inactive start** (`systems/inactive_nona`, `runs/prod2/inactive_nona`,
+`results/fes_v02_nona/`).
+- **Setup.** The D2.50 Na⁺ was swapped with a bulk water.
+  - 100 ns unbiased: Na⁺ never returned, and the inactive state stayed stable (96% of
+    frames in the box).
+  - Then 4 × 375 ns OPES, compared against the active start's first 375 ns. This is
+    the same comparison as v0.1, with sodium the only change.
+
+  | | inactive start with Na⁺ (v0.1) | sodium-free |
+  |---|---|---|
+  | Crossings toward active | 0 | 0 |
+  | Closest approach to the active box (kernel widths) | 2.5 | 4.7 |
+  | Second-half Δ vs active start, RMS / max (kcal/mol) | 2.2 / 5.9 (338 pts) | 2.5 / 6.1 (410 pts) |
+  | Walker-to-walker SD, first → second half (kcal/mol) | 0.75 → 1.9 | 2.1 → 2.8 |
+
+- **Removing Na⁺ loosened the inactive state but did not open a path to the active
+  state.**
+  - Sodium-free walkers populate a new lobe at CV1 0.8–1.05 nm, CV2 0.05–0.25 nm (TM6
+    partly open, NPxxY inactive).
+  - That lobe points toward the active start's TM6-open/NPxxY-inactive corner, but
+    never joins the active basin.
+  - Start-independence did not improve.
+- **So Na⁺ is not the rate-limiting difference** on this timescale.
+
+**Interpretation.**
+- In all three data sets, TM6 and NPxxY each reach both of their values, but only one
+  at a time.
+- Biasing them as two independent CVs does not supply the coupling between them.
+- Two explanations remain, and these runs cannot tell them apart:
+  - **a missing coordinate** that couples TM6 and NPxxY, e.g. the R3.50 / Y7.53
+    microswitch region or a path CV between the endpoints;
+  - **no stable active basin** without a transducer.
+
+  A G-protein-mimetic nanobody (Nb39) bound to the active start would test the second:
+  if the active start then holds, the coordinate question can be asked cleanly.
+
+The 6 μs of OPES and 300 ns unbiased here is a ready-made training set for a learned CV,
+such as Deep-TDA or Deep-LDA on the L-shaped region. It holds 12 biased walker trajectories with all
+secondary observables recorded.
 
 **External validation is out of scope.** Everything above is an internal check, and
 internal convergence detects variance, not force-field bias. Agreement with measured
@@ -205,25 +275,32 @@ function (cAMP, BRET, GTPγS, Kᵢ) was not tested this week.
 | `cv/` | CV definitions, scaffold, RMSD references, PLUMED inputs (`cv/plumed/`) |
 | `systems/` | membrane build, topology, equilibration and OPES launchers, mdp files, built systems |
 | `analysis/` | endpoint measurement, membrane QC, daily OPES monitor, FES/reweighting, convergence |
-| `results/` | endpoint values; daily snapshots; `fes_prod2/` (FES grids, summaries, figures, strided COLVARs, QC) |
+| `results/` | endpoint values; daily snapshots; `fes_prod2/` (v0.1), `fes_v02_ext/` and `fes_v02_nona/` (follow-ups): FES grids, summaries, figures, strided COLVARs, QC |
 | `examples/two-cv-smoke/` | self-contained runnable check of both CVs |
 | `NOTES.md` | stage-by-stage plausibility log and every deviation |
 
 Reproduce the analysis from a finished run:
 `sbatch analysis/final_analysis_job.sh runs/prod2 results/fes_prod2`.
+The follow-ups use directories of symlinks that pair the starts:
+- `runs/v02_ext` links `{active,inactive}` → `prod2/{active,inactive}`.
+- `runs/v02_nona` links `active/w*/COLVAR.*` → `prod2_backup_375ns`, i.e. the first
+  375 ns, and `inactive` → `prod2/inactive_nona`.
 
 ## Where the trajectories live
 
-Not in git; they total about 9 GB of OPES xtc plus checkpoints and OPES KERNELS/STATE. They are on
+Not in git; they total about 20 GB of OPES xtc plus checkpoints and OPES KERNELS/STATE. They are on
 ORCA (Portland State University):
 
 ```
 /scratch/kuhfeldr-Kuhfeld_temp/oprm1-opes-activation/
-  systems/{active,inactive}/prod.*          100 ns unbiased endpoints
-  runs/prod2/{active,inactive}/w{0..3}/      OPES production (opes.xtc, COLVAR.k, KERNELS, STATE)
-  runs/prod1_softwalls/                      superseded first launch (soft walls), not used
+  systems/{active,inactive,inactive_nona}/prod.*   100 ns unbiased endpoints
+  runs/prod2/{active,inactive}/w{0..3}/            OPES production (opes.xtc, COLVAR.k, KERNELS, STATE);
+                                                   active extended to 750 ns
+  runs/prod2/inactive_nona/w{0..3}/                sodium-free inactive start, 375 ns
+  runs/prod2_backup_375ns/active/                  active-start COLVAR/KERNELS/STATE at 375 ns
+  runs/prod1_softwalls/                            superseded first launch (soft walls), not used
 ```
 
 ORCA `/scratch` is not backed up and is subject to purge. Copy these elsewhere before
-relying on them. Strided COLVARs (every 100 ps) for all 8 walkers are committed in
-`results/fes_prod2/colvar_strided/`.
+relying on them. Strided COLVARs (every 100 ps) for every walker are committed in
+`results/fes_*/colvar_strided/`.

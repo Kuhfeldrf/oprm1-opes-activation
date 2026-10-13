@@ -670,3 +670,37 @@ Three questions:
   - The decoupling of CV1 and CV2 is consistent with a missing coordinate, one that
     links TM6 and the NPxxY motif, but does not prove it.
   - The sodium-free comparison (job 209397) still decides whether Na⁺ contributes.
+
+### Day 7 (2026-10-13, later): sodium-free inactive start finished; v0.2
+
+- **Run.** Job 209397 ended normally at 375 ns per walker.
+- **Analysis.** Job 213829 ran on `runs/v02_nona`.
+  - The active start is its first 375 ns, from `prod2_backup_375ns`, so sodium is the
+    only difference from v0.1. The active rows reproduce v0.1 exactly.
+  - Output: `results/fes_v02_nona/`.
+- **Results for the sodium-free start:**
+  - 0 crossings toward active.
+  - Closest approach to the active box: 4.7 kernel widths, at walker 2, 328 ns,
+    (1.01, 0.24). With Na⁺ it was 2.5.
+  - Na⁺ never re-entered the site.
+  - Second-half difference vs the active start: 2.5 kcal/mol RMS, 6.1 max, over 410
+    shared low-FE points. v0.1 had 2.2 RMS and 5.9 max over 338.
+  - Walker SD 2.1 → 2.8 kcal/mol (grows). Q3 vs Q4 RMS 0.7.
+  - rct at the end is 0.04 kJ/mol.
+  - DAMGO contacts ≥ 305; d_salt ≤ 0.52 nm.
+  - Reweight cross-check 0.006 kcal/mol; membrane QC has no flags.
+- **paths_overlay.**
+  - The sodium-free walkers populate a lobe at CV1 0.8–1.05 nm, CV2 0.05–0.25 nm, which
+    the Na⁺-bound start barely visited. That is TM6 partly open with NPxxY inactive.
+  - The lobe points at the active start's (1.2, 0.1) corner but does not join the
+    active basin.
+- **Conclusion.**
+  - Na⁺ loosens TM6 in the inactive state but is not the rate-limiting difference.
+  - Together with the extension, time and sodium are both ruled out at this scale.
+  - TM6 and NPxxY move one at a time in every data set.
+  - Two explanations remain: a missing coupling coordinate, or no stable active basin
+    without a transducer.
+  - README updated (section "Follow-ups (v0.2)"); tagged `v0.2-followups`.
+- **Next options (not started):**
+  - an Nb39-bound active start, to test the transducer explanation;
+  - a learned or path CV trained on the 6 μs here, to test the coordinate explanation.
