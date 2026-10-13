@@ -1,0 +1,64 @@
+{
+ "active": {
+  "frames": 1500008,
+  "walkers": 4,
+  "aggregate_ns": 3000.0,
+  "crossings_inactive_to_active": 0,
+  "crossings_active_to_inactive": 0,
+  "dG_active_minus_inactive_kcal": NaN,
+  "basins_sampled": {
+   "inactive": 0.0,
+   "active": 1.0
+  },
+  "dG_by_quarter_kcal": [
+   NaN,
+   NaN,
+   NaN,
+   NaN
+  ],
+  "dG_cumulative_kcal": [
+   NaN,
+   NaN,
+   NaN,
+   NaN
+  ],
+  "rct_last_kJ": -2.527651,
+  "min_lig_cont": 292.948884,
+  "max_d_salt_nm": 0.502474
+ },
+ "inactive": {
+  "frames": 750004,
+  "walkers": 4,
+  "aggregate_ns": 1500.0,
+  "crossings_inactive_to_active": 0,
+  "crossings_active_to_inactive": 0,
+  "dG_active_minus_inactive_kcal": NaN,
+  "basins_sampled": {
+   "inactive": 1.0,
+   "active": 0.0
+  },
+  "dG_by_quarter_kcal": [
+   NaN,
+   NaN,
+   NaN,
+   NaN
+  ],
+  "dG_cumulative_kcal": [
+   NaN,
+   NaN,
+   NaN,
+   NaN
+  ],
+  "rct_last_kJ": -1.413948,
+  "min_lig_cont": 283.493368,
+  "max_d_salt_nm": 0.494722
+ },
+ "start_independence": {
+  "grid_points_sampled_by_both": 1280,
+  "rms_diff_where_both_sampled_kcal": 3.368900977914273,
+  "grid_points_compared": 122,
+  "max_abs_diff_kcal": 1.5777621835824893,
+  "rms_diff_kcal": 0.744083672150406,
+  "note": "difference after removing the arbitrary per-FES constant; region where both FES < 8 kcal/mol"
+ }
+}

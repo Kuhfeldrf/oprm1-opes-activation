@@ -611,3 +611,62 @@ Three questions:
   - w0 and w2 are still partly deactivated. w2's CV2 continues to fall (0.24 → 0.20).
   - w1 and w3 stay active-like.
   - No committed crossings yet.
+
+### Day 7 (2026-10-13): active-start extension finished (750 ns per walker)
+
+- **Run.** Job 204211 ended normally at 750 ns per walker, 3.0 μs from the active
+  start in total.
+- **Analysis.** Job 213803 ran `final_analysis_job.sh` on `runs/v02_ext`.
+  - `runs/v02_ext` is a directory of symlinks: `active` → `prod2/active`,
+    `inactive` → `prod2/inactive`.
+  - Output: `results/fes_v02_ext/`.
+- **Committed crossings: still 0 in both directions.**
+  - Closest approach to the inactive box over the whole run is 1.23 bandwidths, by
+    walker w2 at 369 ns, i.e. *before* the extension.
+  - Closest approach during the extension, per walker, in bandwidths:
+
+    | walker | first 375 ns | extension |
+    |---|---|---|
+    | w0 | 5.4 | 3.8 |
+    | w1 | 14.5 | 3.9 |
+    | w2 | 1.2 | 1.4 |
+    | w3 | 19.6 | 16.9 |
+
+- **The relaxation seen on Day 5 did not continue.**
+  - w0 and w2 had CV1 in the inactive range from about 30 to 330 ns. They then drifted
+    back to CV1 0.8–1.0 nm.
+  - w3 went the other way: CV2 has been inactive-like (0.05–0.12 nm) since about 450 ns,
+    while CV1 stays at 1.1–1.4 nm.
+  - At the end, w0 and w1 return to CV2 0.3–0.45 nm (active-like).
+- **New observation: the two CVs move independently from the active start.**
+  - Walkers reach the inactive value of each CV separately, but never both together.
+  - The `paths_overlay` plot shows an L shape:
+    - (CV1 ≈ 0.6, CV2 ≈ 0.25–0.35): TM6 closed, NPxxY still active-like;
+    - (CV1 ≈ 1.2, CV2 ≈ 0.05–0.15): TM6 open, NPxxY inactive-like.
+  - Neither corner connects to the inactive box in the sampling from this start.
+  - The inactive start, by contrast, does not visit the (1.2, 0.1) corner.
+- **§10 numbers**, prod2 at 375 ns → extension at 750 ns:
+
+  | | prod2 (375 ns) | extension (750 ns) |
+  |---|---|---|
+  | Walker SD, active start, first → second half (kcal/mol) | 2.2 → 2.2 | 1.9 → 2.7 |
+  | Grid points sampled from both starts | 706 | 1280 |
+  | RMS difference on those points (kcal/mol) | 2.7 | 3.4 |
+  | Second-half low-FE region: RMS (kcal/mol) | 2.2 | 1.7 |
+  | Second-half low-FE region: max (kcal/mol) | 5.9 | 4.5 |
+  | Second-half low-FE region: points | 338 | 328 |
+
+  - The walker SD *grows* in the extension, so §10.4 still fails.
+  - The second-half comparison sets the active start's 375–750 ns against the inactive
+    start's 188–375 ns.
+  - Basins sampled are still disjoint: active start {inactive 0, active 1}.
+- **QC.**
+  - PLUMED reweight cross-check: 0.004 / 0.007 kcal/mol RMS.
+  - Membrane QC: no flags on any walker.
+- **Interpretation.**
+  - Doubling the simulated time did not complete the active→inactive transition in
+    both CVs at once, and the walkers did not converge. Time alone is unlikely to be
+    the limitation.
+  - The decoupling of CV1 and CV2 is consistent with a missing coordinate, one that
+    links TM6 and the NPxxY motif, but does not prove it.
+  - The sodium-free comparison (job 209397) still decides whether Na⁺ contributes.
