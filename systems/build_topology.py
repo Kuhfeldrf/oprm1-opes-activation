@@ -20,6 +20,16 @@ What this enforces, each of which otherwise produces a system that runs and is w
 
 Run in the mor-pilot env (parmed, tleap):
     python systems/build_topology.py --root systems --starts active inactive
+
+v0.3 (PLAN_v03.md) adds two options; the defaults reproduce v0.1 exactly.
+  --lig NLX:naloxone:N04   ligand residue name, parameter basename in structures/params,
+                            cationic N (PLUMED d_salt). Default DAM:damgo:N1. The two
+                            starts may carry different ligands of the same charge.
+  --nb                      a second protein chain (Nb39) follows the ligand. It is
+                            split from the receptor at the NME cap, gets its own
+                            disulfide (Cys24-Cys96) and moleculetype/posres, and is
+                            numbered 1000 + crystal number (chain N) in system_ref.pdb.
+  Topology order becomes receptor, ligand, Nb39, so indices 1..ligand are unchanged.
 """
 import argparse
 import collections
@@ -47,9 +57,13 @@ def xyz(l):
     return np.array([float(l[30:38]), float(l[38:46]), float(l[46:54])])
 
 
-def parse(packed):
-    """Group the packed PDB into molecules: receptor, dam, lipids (POPC = PA+PC+OL,
-    CHL), waters, ions. Lipids/waters are delimited by TER records in packmol output."""
+NB_FIRST, NB_SS = 3, (24, 96)   # Nb39 first crystal residue; its disulfide (crystal numbers)
+
+
+def parse(packed, lig="DAM"):
+    """Group the packed PDB into molecules: receptor (+ Nb39, split later), ligand,
+    lipids (POPC = PA+PC+OL, CHL), waters, ions. Lipids/waters are delimited by TER
+    records in packmol output."""
     rec, dam, mols = [], [], []
     cur = []
     for l in packed.read_text().splitlines():
@@ -63,7 +77,7 @@ def parse(packed):
         rn = l[17:21].strip()
         if rn in AA:
             rec.append(l)
-        elif rn == "DAM":
+        elif rn == lig:
             dam.append(l)
         else:
             cur.append(l)
@@ -90,6 +104,12 @@ def parse(packed):
     return rec, dam, groups
 
 
+def split_nb(rec):
+    """Receptor ends at its NME cap; anything after it is the Nb39 chain."""
+    last = max(k for k, l in enumerate(rec) if l[17:20] == "NME")
+    return rec[:last + 1], rec[last + 1:]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", type=Path, default=Path("systems"))
@@ -97,31 +117,44 @@ def main():
     ap.add_argument("--hmr", type=float, default=3.024)
     ap.add_argument("--write", nargs="+", default=None,
                     help="starts to build outputs for (composition still uses all --starts)")
+    ap.add_argument("--lig", nargs="+", default=["DAM:damgo:N1"],
+                    help="RESN:param_basename:cationic_N, one per start or one for all")
+    ap.add_argument("--nb", action="store_true", help="Nb39 chain follows the ligand")
     a = ap.parse_args()
+    if len(a.lig) == 1:
+        a.lig = a.lig * len(a.starts)
+    LIG = {s: dict(zip(("resn", "par", "catN"), v.split(":"))) for s, v in zip(a.starts, a.lig)}
 
     data = {}
     for s in a.starts:
-        rec, dam, g = parse(a.root / s / "packed.pdb")
+        rec, dam, g = parse(a.root / s / "packed.pdb", LIG[s]["resn"])
         # the crystal Na+ (inactive) is written by packmol as part of the protein file;
         # it surfaces here as a Na+ residue like any other and is kept (it is at the site).
-        data[s] = (rec, dam, g)
+        rec, nb = split_nb(rec) if a.nb else (rec, [])
+        if a.nb and not nb:
+            sys.exit(f"FATAL: {s}: --nb given but nothing follows the receptor NME cap")
+        data[s] = (rec, dam, g, nb)
         print(s, {k: len(v) for k, v in g.items()}, "receptor atoms", len(rec),
-              "DAM atoms", len(dam))
+              LIG[s]["resn"], "atoms", len(dam), "Nb39 atoms", len(nb))
 
     # ---------------- solute charge measured by tleap, not estimated (packmol-memgen's
     # estimate ignored DAMGO's +1 and under-counted Cl- by one)
     q_sol = {}
     for s in a.starts:
         D = a.root / s
+        L = LIG[s]
         rec = [l[:12] + " C  " + l[16:] if l[17:20] == "NME" and l[12:16].strip() == "CH3"
                else l for l in data[s][0]]
+        nb = data[s][3]
+        nbtxt = ("\n".join(nb) + "\nTER\n") if nb else ""
         (D / "tl_solute.pdb").write_text("\n".join(rec) + "\nTER\n" + "\n".join(
-            l[:17] + "DAM L   1" + l[26:] for l in data[s][1]) + "\nTER\nEND\n")
+            l[:17] + f"{L['resn']} L   1" + l[26:] for l in data[s][1]) + "\nTER\n"
+            + nbtxt + "END\n")
         (D / "tl_solute.leap").write_text(f"""
 source leaprc.protein.ff19SB
 source leaprc.gaff2
-loadamberparams {MOL2}/damgo.frcmod
-DAM = loadmol2 {MOL2}/damgo.mol2
+loadamberparams {MOL2}/{L['par']}.frcmod
+{L['resn']} = loadmol2 {MOL2}/{L['par']}.mol2
 x = loadpdb tl_solute.pdb
 bond x.{SS[0] - OFFSET}.SG x.{SS[1] - OFFSET}.SG
 charge x
@@ -151,9 +184,9 @@ quit
                 sys.exit(f"FATAL: {s} has more {ion} than the neutral target; not handled")
     reports = {}
     for s in a.starts:
-        rec, dam, g = data[s]
+        rec, dam, g, nb = data[s]
         rep = {"start": s, "removed": {}, "water_to_ion": {}}
-        P = np.array([xyz(l) for l in rec])
+        P = np.array([xyz(l) for l in rec + nb])   # distances to all protein
         def dist_to_rec(m):
             c = np.array([xyz(l) for l in m]).mean(0)
             return float(np.min(np.linalg.norm(P - c, axis=1)))
@@ -185,7 +218,7 @@ quit
         g = data[s][2]
         excess = len(g["WAT"]) - nwat
         if excess:
-            P = np.array([xyz(l) for l in data[s][0]])
+            P = np.array([xyz(l) for l in data[s][0] + data[s][3]])
             order = sorted(range(len(g["WAT"])),
                            key=lambda i: -float(np.min(np.linalg.norm(P - xyz(g["WAT"][i][0]),
                                                                       axis=1))))
@@ -201,7 +234,8 @@ quit
     # ---------------- per start: write pieces, tleap, verify, convert, HMR
     for s in (a.write or a.starts):
         D = a.root / s
-        rec, dam, g = data[s]
+        rec, dam, g, nb = data[s]
+        L = LIG[s]
         rep = reports[s]
         box = None
         for l in (D / "packmol.inp").read_text().splitlines():
@@ -217,7 +251,11 @@ quit
             "\n".join(l for l in rec if (l[76:78].strip() or l[12:16].strip()[0]) != "H")
             + "\nTER\nEND\n")
         (D / "tl_dam.pdb").write_text("\n".join(
-            l[:17] + "DAM L   1" + l[26:] for l in dam) + "\nTER\nEND\n")
+            l[:17] + f"{L['resn']} L   1" + l[26:] for l in dam) + "\nTER\nEND\n")
+        if nb:
+            (D / "tl_nb.pdb").write_text(
+                "\n".join(l for l in nb if (l[76:78].strip() or l[12:16].strip()[0]) != "H")
+                + "\nTER\nEND\n")
         env = []
         for sp in ("POPC", "CHL", "WAT", "Na+", "Cl-"):
             for m in g[sp]:
@@ -225,17 +263,19 @@ quit
         (D / "tl_env.pdb").write_text("\n".join(env) + "\nEND\n")
 
         i, j = SS[0] - OFFSET, SS[1] - OFFSET
+        nbleap = (f"nb = loadpdb tl_nb.pdb\nbond nb.{NB_SS[0] - NB_FIRST + 1}.SG "
+                  f"nb.{NB_SS[1] - NB_FIRST + 1}.SG\n") if nb else ""
         leap = f"""source leaprc.protein.ff19SB
 source leaprc.lipid21
 source leaprc.water.opc
 source leaprc.gaff2
-loadamberparams {MOL2}/damgo.frcmod
-DAM = loadmol2 {MOL2}/damgo.mol2
+loadamberparams {MOL2}/{L['par']}.frcmod
+{L['resn']} = loadmol2 {MOL2}/{L['par']}.mol2
 rec = loadpdb tl_receptor.pdb
 bond rec.{i}.SG rec.{j}.SG
 lig = loadpdb tl_dam.pdb
-env = loadpdb tl_env.pdb
-sys = combine {{ rec lig env }}
+{nbleap}env = loadpdb tl_env.pdb
+sys = combine {{ rec lig {"nb " if nb else ""}env }}
 set sys box {{ {box[0]:.3f} {box[1]:.3f} {box[2]:.3f} }}
 charge sys
 saveamberparm sys system.parm7 system.rst7
@@ -254,14 +294,28 @@ quit
         amb = parmed.load_file(str(D / "system.parm7"), xyz=str(D / "system.rst7"))
         q = sum(x.charge for x in amb.atoms)
         rep["net_charge"] = round(q, 4)
-        if abs(q) > 1e-3:  # DAMGO mol2 renormalised to exactly +1 (structures/params)
+        if abs(q) > 1e-3:  # ligand mol2s renormalised to exactly +1 (structures/params)
             sys.exit(f"FATAL: {s} not neutral ({q:+.4f})")
-        # contiguity: receptor then DAM first
+        # contiguity: receptor then ligand first (then Nb39 if present)
         names = [res.name for res in amb.residues]
-        ndam = names.index("DAM")
-        if any(n not in AA for n in names[:ndam]) or names.count("DAM") != 1:
-            sys.exit(f"FATAL: {s}: receptor/DAM not contiguous at start of topology")
-        n_solute = amb.residues[ndam].atoms[-1].idx + 1
+        ndam = names.index(L["resn"])
+        if any(n not in AA for n in names[:ndam]) or names.count(L["resn"]) != 1:
+            sys.exit(f"FATAL: {s}: receptor/{L['resn']} not contiguous at start of topology")
+        n_nbres = 0
+        if nb:
+            n_nbres = len({l[17:27] for l in nb})
+            nbres = amb.residues[ndam + 1:ndam + 1 + n_nbres]
+            # tleap prefixes termini (NGLN / CSER); strip for the AA check
+            if any(r.name.lstrip("NC")[-3:] not in AA and r.name not in AA for r in nbres):
+                sys.exit(f"FATAL: {s}: Nb39 residues do not follow the ligand")
+            nsg = [at for r in nbres if r.name == "CYX" for at in r.atoms if at.name == "SG"]
+            if len(nsg) != 2 or not any(b.atom1 in nsg and b.atom2 in nsg for b in amb.bonds):
+                sys.exit(f"FATAL: {s}: Nb39 disulfide not bonded")
+            n_solute = nbres[-1].atoms[-1].idx + 1
+            rep["nb39_residues"] = n_nbres
+            rep["nb39_termini"] = [nbres[0].name, nbres[-1].name]
+        else:
+            n_solute = amb.residues[ndam].atoms[-1].idx + 1
         rep["solute_atoms_1_to"] = n_solute
         # disulfide present
         sg = [at for res in amb.residues[:ndam] if res.name == "CYX" for at in res.atoms
@@ -302,8 +356,12 @@ quit
         for at in gm.atoms[:n_solute]:
             res = at.residue
             k = res.idx
-            resnum = k + 1 + OFFSET if res.name != "DAM" else 1
-            chain = "R" if res.name != "DAM" else "L"
+            if k < ndam:
+                resnum, chain = k + 1 + OFFSET, "R"
+            elif k == ndam:
+                resnum, chain = 1, "L"
+            else:                       # Nb39: 1000 + crystal number, never a receptor number
+                resnum, chain = 1000 + NB_FIRST + (k - ndam - 1), "N"
             nm = at.name if len(at.name) == 4 else f" {at.name:<3}"
             out.append(f"ATOM  {at.idx+1:5d} {nm:4s} {res.name:>3s} {chain}{resnum:4d}    "
                        f"{at.xx:8.3f}{at.xy:8.3f}{at.xz:8.3f}  1.00  0.00")
@@ -316,29 +374,39 @@ quit
                 if at.residue.name in ("WAT", "Na+", "Cl-")]
         if len(solute) + len(memb) + len(solv) != len(gm.atoms):
             sys.exit(f"FATAL: {s}: index groups do not partition the system")
-        lig = [at.idx + 1 for at in gm.atoms if at.residue.name == "DAM"]
+        lig = [at.idx + 1 for at in gm.atoms if at.residue.name == L["resn"]]
         heavy_solute = [at.idx + 1 for at in gm.atoms[:n_solute] if at.element != 1]
         rec_heavy = [i for i in heavy_solute if i < lig[0]]
+        groups = [("System", list(range(1, len(gm.atoms) + 1))),
+                  ("Solute", solute), ("MEMB", memb), ("SOLV", solv),
+                  ("DAM" if L["resn"] == "DAM" else "LIG", lig),
+                  ("Solute_heavy", heavy_solute), ("Receptor_heavy", rec_heavy)]
+        if nb:
+            nbidx = list(range(lig[-1] + 1, n_solute + 1))
+            groups += [("NB39", nbidx), ("NB39_heavy", [i for i in heavy_solute if i > lig[-1]])]
         with open(D / "index.ndx", "w") as f:
-            for name, idx in (("System", list(range(1, len(gm.atoms) + 1))),
-                              ("Solute", solute), ("MEMB", memb), ("SOLV", solv),
-                              ("DAM", lig), ("Solute_heavy", heavy_solute),
-                              ("Receptor_heavy", rec_heavy)):
+            for name, idx in groups:
                 f.write(f"[ {name} ]\n")
                 for c in range(0, len(idx), 15):
                     f.write(" ".join(f"{x:6d}" for x in idx[c:c + 15]) + "\n")
         rep["groups"] = {"Solute": len(solute), "MEMB": len(memb), "SOLV": len(solv),
-                         "DAM": f"{lig[0]}-{lig[-1]}"}
-        # 1-based indices consumed by systems/render_plumed.py
+                         L["resn"]: f"{lig[0]}-{lig[-1]}"}
+        if nb:
+            rep["groups"]["NB39"] = f"{lig[-1] + 1}-{n_solute}"
+        # 1-based indices consumed by systems/render_plumed.py. The dam_* keys hold the
+        # LIGAND whatever it is (names kept so v0.1 templates render unchanged).
         rep["plumed"] = {
             "receptor_last": lig[0] - 1,
             "dam_first": lig[0], "dam_last": lig[-1],
-            "dam_heavy": [at.idx + 1 for at in gm.atoms if at.residue.name == "DAM"
+            "dam_heavy": [at.idx + 1 for at in gm.atoms if at.residue.name == L["resn"]
                           and at.element != 1],
             "dam_N1": [at.idx + 1 for at in gm.atoms
-                       if at.residue.name == "DAM" and at.name == "N1"][0],
+                       if at.residue.name == L["resn"] and at.name == L["catN"]][0],
             "na": [at.idx + 1 for at in gm.atoms if at.residue.name == "Na+"],
+            "ligand": L["resn"],
         }
+        if nb:
+            rep["plumed"]["nb_first"], rep["plumed"]["nb_last"] = lig[-1] + 1, n_solute
 
         # position restraints on solute heavy atoms, switched by -DPOSRES -DPOSRES_FC=...
         top = (D / "system.top").read_text()
@@ -351,7 +419,10 @@ quit
                 rows = [l.split() for l in atoms_sec.splitlines()
                         if l.split() and l.split()[0].isdigit()]  # skips ; and #ifdef lines
                 resn = {r[3] for r in rows}
-                if resn & (AA | {"DAM"}) and not resn & {"WAT", "PA", "CHL"}:
+                if resn & (AA | {L["resn"]}) or any(r[:1] in "NC" and r[1:] in AA for r in resn):
+                    if resn & {"WAT", "PA", "CHL"}:
+                        new.append(b)
+                        continue
                     itp = f"posre_{mname.group(1)}.itp"
                     with open(D / itp, "w") as f:
                         f.write("[ position_restraints ]\n")
@@ -363,8 +434,9 @@ quit
             new.append(b)
         (D / "system.top").write_text("".join(new))
         rep["posres_moleculetypes"] = done
-        if len(done) != 2:
-            sys.exit(f"FATAL: {s}: expected posres for receptor and DAM, got {done}")
+        if len(done) != 2 + bool(nb):
+            sys.exit(f"FATAL: {s}: expected posres for receptor, {L['resn']}"
+                     f"{' and Nb39' if nb else ''}, got {done}")
         (D / "build_report.json").write_text(json.dumps(rep, indent=1))
         print(json.dumps(rep, indent=1))
 

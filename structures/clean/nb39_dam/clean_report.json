@@ -1,0 +1,60 @@
+{
+ "source": "5C1M",
+ "receptor_completed_sidechains": [
+  "ARG275:6",
+  "GLU272:4",
+  "ILE189:1",
+  "LYS271:4",
+  "THR139:2"
+ ],
+ "humanised": [
+  "ASN139THR",
+  "VAL189ILE",
+  "ILE308VAL"
+ ],
+ "nb39_author_minus_seqres": 2,
+ "nb39_terminal_missing_ignored": null,
+ "nb39_completed_sidechains": [],
+ "nb39_loop_relax": {
+  "residues": "97-112",
+  "free_heavy_atoms": 118,
+  "E_kJ_before": 38193834.0,
+  "E_kJ_after": -43727.9
+ },
+ "opm_scaffold_rmsd_A": 0.59,
+ "nb39_receptor_min_heavy_dist_A": 2.54,
+ "CV1_CA_A": 12.94,
+ "CV2_vs_9PXU_A": 4.62,
+ "receptor_states_from_v01": {
+  "HIS173": "HID",
+  "HIS225": "HID",
+  "HIS299": "HID",
+  "HIS321": "HID"
+ },
+ "nb39_disulfides": [
+  [
+   24,
+   96
+  ]
+ ],
+ "nb39_states_nondefault": {
+  "HIS88": "HID"
+ },
+ "system": "nb39_dam",
+ "ligand": {
+  "source": "10TM",
+  "scaffold_rmsd_A": 0.542,
+  "template_map_rmsd_A": 0.733,
+  "min_heavy_dist_to_receptor_A": 2.67,
+  "receptor_contacts_lt_2.5A": [],
+  "cationic_N": "N1",
+  "cationic_N_to_D149_OD_min_A": 3.64,
+  "min_heavy_dist_to_nb39_A": 28.9
+ },
+ "nb39": true,
+ "ligand_resname": "DAM",
+ "z_range_A": [
+  -54.3,
+  29.2
+ ]
+}

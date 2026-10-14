@@ -6,7 +6,7 @@
 #SBATCH --mem=32G
 #SBATCH --output=logs/pack_%x_%j.log
 # Pack one start complex into POPC:CHL1 7:3 (30 mol% cholesterol), 150 mM NaCl.
-# Usage: sbatch -J pack_<start> systems/pack.sh <start>      (active | inactive)
+# Usage: sbatch -J pack_<start> systems/pack.sh <start>      (active | inactive | v0.3: nb39_dam ...)
 #
 # Identical settings for both starts; --distxy_fix pins the same lateral box so the
 # two systems carry (near-)identical lipid counts. Settings inherited from the parent
@@ -33,7 +33,7 @@ packmol-memgen \
   --output packed.pdb --log packmol_memgen.log
 grep -q "Success" packmol.log 2>/dev/null && echo "PACKMOL: converged" \
   || echo "PACKMOL: did NOT reach tolerance (best solution written)"
-for r in POPC PC PA OL CHL WAT Na+ Cl- DAM; do
+for r in POPC PC PA OL CHL WAT Na+ Cl- DAM NLX; do
   printf "%-5s %s\n" "$r" "$(awk -v r=$r '$1~/ATOM|HETATM/ && $4==r' packed.pdb | awk '{print $5$6}' | sort -u | wc -l)"
 done
 echo "atoms $(grep -c -E '^(ATOM|HETATM)' packed.pdb)"

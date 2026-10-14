@@ -33,6 +33,8 @@ instructions.md
 structures/clean/*/receptor*
 structures/clean/*/pdb2pqr.log
 structures/clean.out
+structures/clean/v03_work/
+structures/params/nlx_build/
 systems/*/*.pdb
 !systems/*/system_ref.pdb
 systems/*/packmol*
