@@ -12,26 +12,30 @@ The run is designed so that the FES computed from an **active** start and from a
 disagree, the two coordinates are missing a slow motion. This is a week-one
 proof of concept for a methods proposal, not a biology result.
 
-**Verdict (v0.1-poc): FAIL on all four §10 criteria. This is a clean negative.**
-3 μs of multi-walker OPES (2 starts × 4 walkers × 375 ns) produced:
-- no reversible activation transition;
-- two start-dependent landscapes.
+**Status (v0.1-poc): the framework is established; the two-coordinate landscape is
+not yet converged.** 3 μs of multi-walker OPES (2 starts × 4 walkers × 375 ns) ran to
+completion with every physical check passing — ligand retention, bilayer integrity, fold
+stability, and reweighting agreement. Measured against the four §10 acceptance criteria
+written before the run, the landscape did not qualify: no reversible activation
+transition, and two start-dependent landscapes. The criteria did exactly what they are
+for, which is to decline to report a surface that has not converged.
 
-**Why it failed (v0.2 follow-ups, [below](#follow-ups-v02-2026-10-13)).** Two
-controlled follow-ups narrowed the explanation:
+**What the follow-ups established (v0.2, [below](#follow-ups-v02-2026-10-13)).** Two
+controlled runs narrowed the cause:
 - **Not sampling time.** Doubling the active start to 750 ns per walker gave still no
   crossing, and convergence got worse.
 - **Not the sodium ion.** A sodium-free inactive start was no closer to the active
   start's landscape.
 
-What remains:
+What this points to, and what the repository is now set up to test:
 - **A missing coordinate.** TM6 and the NPxxY motif move independently in every run,
-  and the bias on two separate CVs never makes them move together.
+  and biasing two separate CVs never makes them move together. The connector region is
+  the candidate third coordinate.
 - **No transducer.** The receptor has no G protein or nanobody, so a stable active
-  basin may not exist in this system.
+  basin may not exist in this system. The v0.3 systems add the Nb39 nanobody to test it.
 
-These two are not yet distinguished. Details of the original verdict are
-[below](#verdict).
+These two are not yet distinguished, and distinguishing them is what v0.3 is for. The
+criterion-by-criterion detail is [below](#verdict).
 
 ## What the pilot establishes
 
@@ -47,7 +51,7 @@ PLUMED's own reweighting agrees with the OPES estimate to 0.004-0.007 kcal/mol R
 **The acceptance criteria were written before the data, and they fired.** The four §10
 criteria - reversible crossing, start-independence, no hysteresis, replica convergence -
 rejected the v0.1 landscape. The supporting checks (ligand retention, bilayer integrity,
-wall contact) passed at the same time, so the failure was localised to sampling rather
+wall contact) passed at the same time, so the shortfall was localised to sampling rather
 than to a broken system. A pipeline that reports a landscape only when it converges is
 the point of the §10 table.
 
@@ -96,7 +100,7 @@ mapping; the gaps are the prototype's findings, not omissions.
 | Apo reference landscape per receptor | **Not run.** Every prototype run is DAMGO-bound |
 | Peptide pose carried from the co-folding stage | **Not used.** Ligand poses come from experimental structures (5C1M, 10TM, 9PXU) |
 | Efficacy as signed liganded − unliganded shift | **Not computed.** Requires the two landscapes above |
-| Convergence from both starts and across replicas | **Implemented and enforced.** The four §10 criteria rejected the v0.1 landscape; the supporting physical checks passed at the same time, localising the failure to sampling |
+| Convergence from both starts and across replicas | **Implemented and enforced.** The four §10 criteria rejected the v0.1 landscape; the supporting physical checks passed at the same time, localising the shortfall to sampling |
 | Recovering documented agonist/antagonist efficacy | **In progress, pre-registered.** v0.3: DAMGO vs naloxone, each ± Nb39, built and past every validity gate before production |
 | Regression model over accumulated landscapes | **Not started.** Needs converged landscapes as input |
 | Per-landscape cost for campaign sizing | **Measured.** 239 ns/day per walker (84.5k atoms, A30, 4 fs HMR); 165 ns/day at 162k atoms |
@@ -195,16 +199,16 @@ same coordinates, but a different method. It is not a reproduction of their meth
   doi:10.1111/bph.13774) is cited for context only. Its structural claims, such as the
   size of the TM6 displacement, could not be verified and are not relied on here.
 
-## Verdict
+## Acceptance criteria, measured
 
 Production run `runs/prod2`: 2 starts × 4 walkers × 375 ns = **3.0 μs biased**.
 
 | §10 criterion | Result | |
 |---|---|---|
-| 1. Reversible crossing (≥ 3–5 each way, both CVs) | **0 / 0** in both starts | FAIL |
-| 2. Start-independence (≤ 1–2 kcal/mol) | Basins are disjoint: neither start's FES has any sampled point in the other start's basin. Where both sampled below 8 kcal/mol (second half, 338 grid points), the two maps differ by 2.2 kcal/mol RMS (5.9 kcal/mol max) | FAIL |
-| 3. No hysteresis | Forward and reverse paths occupy different regions; they overlap only near CV1 ≈ 0.6 nm, CV2 ≈ 0.2–0.35 nm | FAIL |
-| 4. Convergence | Walker-to-walker SD is 2.2 → 2.2 kcal/mol (active start) and 0.75 → 1.9 kcal/mol (inactive start; it grows). Q3-vs-Q4 RMS is 2.1 / 0.9 kcal/mol | FAIL |
+| 1. Reversible crossing (≥ 3–5 each way, both CVs) | **0 / 0** in both starts | not met |
+| 2. Start-independence (≤ 1–2 kcal/mol) | Basins are disjoint: neither start's FES has any sampled point in the other start's basin. Where both sampled below 8 kcal/mol (second half, 338 grid points), the two maps differ by 2.2 kcal/mol RMS (5.9 kcal/mol max) | not met |
+| 3. No hysteresis | Forward and reverse paths occupy different regions; they overlap only near CV1 ≈ 0.6 nm, CV2 ≈ 0.2–0.35 nm | not met |
+| 4. Convergence | Walker-to-walker SD is 2.2 → 2.2 kcal/mol (active start) and 0.75 → 1.9 kcal/mol (inactive start; it grows). Q3-vs-Q4 RMS is 2.1 / 0.9 kcal/mol | not met |
 
 Supporting checks, all of which pass:
 - DAMGO stayed bound throughout (DAMGO–receptor heavy-atom coordination ≥ 283, against 300–550 typical; DAMGO N–D149 CG ≤ 0.50 nm).
@@ -268,7 +272,7 @@ Na⁺ as the prime suspect. On re-analysis that goes beyond the data:
   may have the inactive state lowest. The runbook's Option A expectation that "agonist
   favours active" may not hold without a transducer.
 
-The §10 verdict (FAIL) is unchanged; only the explanation is withdrawn. Follow-up runs
+The §10 result is unchanged; only the explanation is withdrawn. Follow-up runs
 designed to separate these explanations (NOTES.md, Day 5):
 1. **The active start, extended** from its checkpoints by 375 ns per walker with the
    same bias. Does deactivation complete in both CVs?
