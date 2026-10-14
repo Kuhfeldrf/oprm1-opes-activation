@@ -704,3 +704,75 @@ Three questions:
 - **Next options (not started):**
   - an Nb39-bound active start, to test the transducer explanation;
   - a learned or path CV trained on the 6 μs here, to test the coordinate explanation.
+
+## v0.3 — agonist vs antagonist efficacy test (PLAN_v03.md)
+
+### Day 8 (2026-10-13/14): G1–G3
+
+- **G1 (commit e0541c1).** Four complexes on one set of 5C1M receptor coordinates;
+  naloxone GAFF2/AM1-BCC (`NLX`, +1). Rebuilding both v0.1 starts with the generalised
+  `build_topology.py` (job 214938) reproduces every file byte-for-byte bar the GROMACS
+  header; every PLUMED index is unchanged.
+- **G2 (commit e87a2f3).** Composition identical within each pair, all neutral:
+
+  | pair | atoms | POPC | CHL | WAT | Na⁺ | Cl⁻ | box (Å) |
+  |---|---|---|---|---|---|---|---|
+  | `free_*` | 84.5k | 194 | 84 | 11,913 | 20 | 33 | 95 × 95 × 86 |
+  | `nb39_*` | 162k | 194 | 84 | 30,844 | 73 | 84 | 95 × 95 × 150 |
+
+  Two defects in new code paths, both fixed there:
+  - packmol-memgen sized the z box from the extracellular side (±43 Å) and ignored Nb39
+    reaching z = −54.3; packmol stopped with "Fixed molecule are outside the PBC box".
+    `pack.sh` takes a z override (`--dims`), used for `nb39_*` only.
+  - The Nb39 disulfide used a computed residue *index*; LEaP resolves `unit.N` by PDB
+    residue *number*. Harmless for the receptor (numbered from 1), fatal for Nb39
+    (numbered from 282). The cysteine numbers are now read from the residues.
+- **G3 equilibration** (jobs 216031/216032/216713/216714, `long`, 1 × A30 each).
+  - Seeds set explicitly, 20261401–04. `equilibrate.sh` derives its default from the
+    *first letter* of the system name, which would give both members of each pair the
+    same seed.
+  - Unbiased leg 10 ns, as the plan says; the script's default is 100.
+  - Measured single-A30 throughput at 4 fs: `free_*` 282 / 278 ns/day, `nb39_*`
+    165 / 165 ns/day.
+
+  Gate, over the 10 ns unbiased leg (active = CV1 ≥ 1.00 nm and CV2 ≥ 0.25 nm):
+
+  | system | active | CV1 min (nm) | CV2 min (nm) | d_salt ≤ 0.6 nm | d_salt max | lig_cont 0–1 → 9–10 ns |
+  |---|---|---|---|---|---|---|
+  | v0.1 `active` (ref.) | 99.9 % | 1.133 | 0.250 | 100 % | 0.391 | 354 → 363 |
+  | `free_dam` | 100 % | 1.147 | 0.359 | 100 % | 0.495 | 360 → 355 |
+  | `free_nlx` | 100 % | 1.205 | 0.272 | 100 % | 0.399 | 283 → 286 |
+  | `nb39_dam` | 100 % | 1.209 | 0.328 | 100 % | 0.420 | 345 → 363 |
+  | `nb39_nlx` | 100 % | 1.192 | 0.369 | 100 % | 0.398 | 281 → 260 |
+
+  Membrane QC (`analysis/membrane_qc.py`, v0.1 thresholds, stride 20; job 219526,
+  `results/g3_qc/`): no flags on any system.
+
+  | system | P–P (Å) | APL (Å²) | TM centre − midplane (Å) | TM tilt (°) | core waters | TM helicity |
+  |---|---|---|---|---|---|---|
+  | `free_dam` | 42.7 | 50.4 | −3.5 | 24.0 | 1.5 | 0.89 |
+  | `free_nlx` | 42.1 | 51.1 | −3.0 | 24.0 | 0.2 | 0.89 |
+  | `nb39_dam` | 41.5 | 52.4 | −1.9 | 23.5 | 0.5 | 0.89 |
+  | `nb39_nlx` | 41.4 | 52.7 | −2.5 | 23.9 | 0.5 | 0.89 |
+
+  Nb39–receptor interface (heavy-atom pairs within 4.5 Å, `analysis/nb_contacts.py`):
+  `nb39_dam` 290 → 248 (retention 0.86, minimum 243), `nb39_nlx` 259 → 274 (1.06,
+  minimum 222); 28–30 receptor residues in contact throughout. The interface holds in
+  both.
+
+  **G3 passes for all four systems.** Watch-items, not failures:
+  `free_nlx` has the lowest CV2 minimum (0.272 nm, nearest the threshold), and
+  `nb39_nlx` lig_cont fell 8 % with the D149 salt bridge intact throughout.
+
+### Deviations from PLAN_v03.md
+
+- **`lig_rmsd` is not logged by PLUMED.** The plan lists it as an added observable; the
+  measurement templates carry `nb_cont` but not `lig_rmsd`. It will be computed from the
+  trajectories (full system, every 100 ps) after scaffold alignment, as the plan defines
+  it. The 10 ps observables are unaffected.
+- **Nb39 production walltime.** At 165 ns/day a 500 ns replica needs about 73 h, past
+  `replicas.sh`'s former fixed `-maxh 70`. `MAXH` is now a parameter; `nb39_*` run with
+  `--time=5-00:00:00 MAXH=118` instead of finishing through a restart.
+- **`nb_cont` during G3.** `equilibrate.sh` renders the plain template, so the G3 leg has
+  no `nb_cont`; the interface was measured from the trajectory instead
+  (`analysis/nb_contacts.py`, same 4.5 Å heavy-atom definition).

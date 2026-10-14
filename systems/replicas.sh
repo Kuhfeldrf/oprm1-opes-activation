@@ -14,7 +14,10 @@
 # logs the measurement-only PLUMED observables (COLVAR_measure.<k>).
 #
 # Usage: sbatch -J reps_<system> systems/replicas.sh <system> <run_tag> <ns_per_replica>
-#               [TEMPLATE=plumed_measure.dat] [SEED_BASE=20261300]
+#               [TEMPLATE=plumed_measure.dat] [SEED_BASE=20261300] [MAXH=70]
+# MAXH must sit below the job --time. The 3-day default holds a free_* system (500 ns
+# at a measured 282 ns/day is 43 h) but not an Nb39 one (165 ns/day, 73 h): submit
+# those with --time=5-00:00:00 MAXH=118, or they stop at 70 h and need a restart.
 # Restart: resubmit the same command; replicas continue from their checkpoints.
 set -eo pipefail
 SYSN=$1; TAG=$2; NS=$3; shift 3
@@ -24,7 +27,7 @@ NR=${SLURM_NTASKS:-4}
 SYS=$ROOT/systems/$SYSN
 RUN=$ROOT/runs/$TAG/$SYSN
 mkdir -p "$RUN"; cd "$RUN"
-declare -A KV=( [TEMPLATE]=plumed_measure.dat [SEED_BASE]=20261300 )
+declare -A KV=( [TEMPLATE]=plumed_measure.dat [SEED_BASE]=20261300 [MAXH]=70 )
 for kv in "$@"; do KV[${kv%%=*}]=${kv#*=}; done
 [ -f $SYS/npt_10.gro ] || { echo "FATAL: $SYSN not equilibrated (no npt_10.gro)"; exit 1; }
 
@@ -45,5 +48,5 @@ done
 CPI=""; [ -f r0/md.cpt ] && CPI="-cpi md.cpt"
 mpirun -np $NR --bind-to none gmx_mpi mdrun -multidir ${DIRS[@]} -deffnm md $CPI \
     -plumed plumed.dat -ntomp ${SLURM_CPUS_PER_TASK:-16} -nb gpu -pme gpu -bonded gpu \
-    -maxh 70
+    -maxh ${KV[MAXH]}
 grep -h Performance r*/md.log | tail -$NR
