@@ -33,8 +33,87 @@ What remains:
 These two are not yet distinguished. Details of the original verdict are
 [below](#verdict).
 
+## What the pilot establishes
+
+The verdict above is about one landscape. The framework that produced it, and that the
+12-receptor panel would reuse, is working and measured. Each item below is a file in this
+repository, not an expectation.
+
+**The toolchain runs.** GROMACS 2025.3 with PLUMED 2.10.1 (`OPES_METAD`, built from
+source), multi-walker shared bias across 4 walkers, on a 150k-atom scale membrane system.
+PLUMED's own reweighting agrees with the OPES estimate to 0.004-0.007 kcal/mol RMS
+(`results/fes_prod2/plumed_reweight/comparison.json`).
+
+**The acceptance criteria were written before the data, and they fired.** The four §10
+criteria - reversible crossing, start-independence, no hysteresis, replica convergence -
+rejected the v0.1 landscape. The supporting checks (ligand retention, bilayer integrity,
+wall contact) passed at the same time, so the failure was localised to sampling rather
+than to a broken system. A pipeline that reports a landscape only when it converges is
+the point of the §10 table.
+
+**The diagnosis was narrowed by controlled runs, not by argument.** Doubling the active
+start to 750 ns/walker and removing the sodium ion each changed the answer not at all,
+which excludes simulation length and Na+ coordination. TM6 and NPxxY reach their inactive
+values separately in every dataset and never together - the signature of a missing
+coupling coordinate, which is a protocol change rather than a cost problem.
+
+**The systems are reproducible to the byte.** `systems/build_topology.py` rebuilt both
+v0.1 endpoints after being generalised for a second ligand and a transducer chain: every
+output file is identical bar the GROMACS header, and every PLUMED atom index is unchanged
+(job 214938).
+
+**Per-landscape cost is measured, not estimated.** On one A30 at 4 fs with HMR:
+239 ns/day per walker for the 84.5k-atom system (4 walkers, one node), 282 ns/day for a
+single replica, and 165 ns/day for the 162k-atom Nb39 system. These are the numbers that
+size a panel campaign.
+
+**The efficacy test is built and pre-registered.** `PLAN_v03.md` was committed before any
+v0.3 data existed. Its four systems - DAMGO and naloxone, each with and without the Nb39
+transducer, on one set of receptor coordinates with composition matched within each pair -
+are built, equilibrated, and past every validity gate (`NOTES.md`, Day 8).
+
+
 Quickest way to check that the setup works: [`examples/two-cv-smoke/`](examples/two-cv-smoke/)
 (about 5 s on 4 CPU cores, no GPU and no allocation needed).
+
+## Relation to the 12-receptor panel protocol
+
+This repository is the μ-opioid prototype for a panel protocol: twelve peptide-activated
+GPCRs of the enteroendocrine membrane, each solved in both the active and the inactive
+conformation, each given an apo reference landscape and one landscape per bound peptide,
+with efficacy read as the signed shift between them. The table states, element by element,
+what the prototype has demonstrated and what it has not. It is the honest version of that
+mapping; the gaps are the prototype's findings, not omissions.
+
+| Panel protocol element | Prototype status |
+|---|---|
+| 150k-atom receptor + bilayer system, GROMACS + PLUMED | **Demonstrated.** 84.5k atoms without transducer, 162k with Nb39; build is byte-reproducible |
+| Multi-walker OPES along activation coordinates | **Demonstrated.** 4 walkers, shared bias, ~6 μs total; reweighting agrees to 0.004–0.007 kcal/mol |
+| CV1 TM6 displacement, CV2 NPxxY | **Demonstrated as biased coordinates.** Both reach their inactive values |
+| CV3 connector region | **Not yet biased.** Logged as `chi_w295` only. The prototype's central finding — TM6 and NPxxY never move together — is what motivates promoting it to a biased coordinate |
+| Reversible driving between experimental endpoints | **Not achieved on 6 μs with two CVs.** 0 committed crossings in either direction |
+| ΔG between endpoints | **Not obtained.** The two starts' basins are disjoint, so no endpoint difference can be read |
+| Apo reference landscape per receptor | **Not run.** Every prototype run is DAMGO-bound |
+| Peptide pose carried from the co-folding stage | **Not used.** Ligand poses come from experimental structures (5C1M, 10TM, 9PXU) |
+| Efficacy as signed liganded − unliganded shift | **Not computed.** Requires the two landscapes above |
+| Convergence from both starts and across replicas | **Implemented and enforced.** The four §10 criteria rejected the v0.1 landscape; the supporting physical checks passed at the same time, localising the failure to sampling |
+| Recovering documented agonist/antagonist efficacy | **In progress, pre-registered.** v0.3: DAMGO vs naloxone, each ± Nb39, built and past every validity gate before production |
+| Regression model over accumulated landscapes | **Not started.** Needs converged landscapes as input |
+| Per-landscape cost for campaign sizing | **Measured.** 239 ns/day per walker (84.5k atoms, A30, 4 fs HMR); 165 ns/day at 162k atoms |
+
+Two consequences worth stating plainly, because they shape what a panel campaign should
+buy:
+
+- **The limitation the prototype found is a coordinate problem, not a hardware problem.**
+  Doubling simulation time made convergence worse, not better. Adding GPUs to a
+  two-coordinate OPES run on this system would buy more unconverged sampling. The panel
+  protocol therefore needs the third coordinate and the transducer-stabilised reference,
+  both of which this repository is now set up to test.
+- **The prototype's throughput requirement is parallel, not coupled.** OPES walkers
+  exchange only a small shared-bias file, and the v0.3 replicas are independent by
+  construction — coupling them through GROMACS's `-multidir` cost 91% of wall time in
+  inter-simulation signalling and was removed. Activation MD fills a large machine by
+  running many landscapes at once, not by tightly coupling one.
 
 ## Collective variables (human numbering)
 
