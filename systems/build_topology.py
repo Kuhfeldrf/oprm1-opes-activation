@@ -263,8 +263,15 @@ quit
         (D / "tl_env.pdb").write_text("\n".join(env) + "\nEND\n")
 
         i, j = SS[0] - OFFSET, SS[1] - OFFSET
-        nbleap = (f"nb = loadpdb tl_nb.pdb\nbond nb.{NB_SS[0] - NB_FIRST + 1}.SG "
-                  f"nb.{NB_SS[1] - NB_FIRST + 1}.SG\n") if nb else ""
+        nbleap = ""
+        if nb:
+            # LEaP resolves unit.N.atom by the PDB residue NUMBER, not by position. The
+            # receptor is numbered from 1 so the two coincide there; Nb39 follows it and
+            # does not, so take the cysteines' own numbers rather than computing an index.
+            cys = sorted({int(l[22:26]) for l in nb if l[17:20] in ("CYS", "CYX")})
+            if len(cys) != 2:
+                sys.exit(f"FATAL: {s}: expected 2 Nb39 cysteines, found {cys}")
+            nbleap = f"nb = loadpdb tl_nb.pdb\nbond nb.{cys[0]}.SG nb.{cys[1]}.SG\n"
         leap = f"""source leaprc.protein.ff19SB
 source leaprc.lipid21
 source leaprc.water.opc
